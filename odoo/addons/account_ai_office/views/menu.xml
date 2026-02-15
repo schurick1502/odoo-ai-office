@@ -44,6 +44,36 @@
         sequence="40"
     />
 
+    <!-- Submenu: Export -->
+    <menuitem
+        id="menu_ai_office_export"
+        name="Export"
+        parent="menu_ai_office_root"
+        sequence="45"
+        groups="account_ai_office.ai_office_approver"
+    />
+    <menuitem
+        id="menu_ai_office_export_datev"
+        name="DATEV Export"
+        parent="menu_ai_office_export"
+        action="action_datev_export"
+        sequence="10"
+    />
+    <menuitem
+        id="menu_ai_office_export_tax_report"
+        name="Tax Report (UStVA/ZM)"
+        parent="menu_ai_office_export"
+        action="action_tax_report"
+        sequence="20"
+    />
+    <menuitem
+        id="menu_ai_office_export_audit"
+        name="Audit Log Export"
+        parent="menu_ai_office_export"
+        action="action_audit_log_export"
+        sequence="30"
+    />
+
     <!-- Submenu: Policies -->
     <menuitem
         id="menu_ai_office_policies"

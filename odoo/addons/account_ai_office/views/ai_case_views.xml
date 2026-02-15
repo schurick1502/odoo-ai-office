@@ -49,8 +49,10 @@
                         invisible="state != 'approved'"
                         groups="account_ai_office.ai_office_approver"/>
                     <button name="action_export" type="object"
-                        string="Export"
-                        invisible="state != 'posted'"/>
+                        string="Export DATEV"
+                        invisible="state != 'posted'"
+                        icon="fa-download"
+                        groups="account_ai_office.ai_office_approver"/>
                     <button name="action_run_opos" type="object"
                         string="Run OPOS" class="btn-secondary"
                         invisible="state != 'posted'"
@@ -86,6 +88,9 @@
                             <field name="source_model"/>
                             <field name="source_id"/>
                             <field name="move_id" readonly="1"/>
+                            <field name="datev_file_id" readonly="1"
+                                invisible="not datev_file_id"
+                                widget="many2one"/>
                         </group>
                     </group>
                     <notebook>

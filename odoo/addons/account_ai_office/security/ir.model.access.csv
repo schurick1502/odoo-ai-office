@@ -13,3 +13,7 @@ access_ai_policy_approver,account.ai.policy.approver,model_account_ai_policy,ai_
 access_ai_policy_admin,account.ai.policy.admin,model_account_ai_policy,ai_office_admin,1,1,1,1
 access_ai_audit_log_export_approver,account.ai.audit_log.export.approver,model_account_ai_audit_log_export,ai_office_approver,1,1,1,1
 access_ai_audit_log_export_admin,account.ai.audit_log.export.admin,model_account_ai_audit_log_export,ai_office_admin,1,1,1,1
+access_ai_datev_export_approver,account.ai.datev.export.approver,model_account_ai_datev_export,ai_office_approver,1,1,1,1
+access_ai_datev_export_admin,account.ai.datev.export.admin,model_account_ai_datev_export,ai_office_admin,1,1,1,1
+access_ai_tax_report_approver,account.ai.tax.report.approver,model_account_ai_tax_report,ai_office_approver,1,1,1,1
+access_ai_tax_report_admin,account.ai.tax.report.admin,model_account_ai_tax_report,ai_office_admin,1,1,1,1

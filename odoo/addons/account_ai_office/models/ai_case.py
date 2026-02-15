@@ -1,3 +1,6 @@
+import base64
+import csv
+import io
 import json
 import logging
 import uuid
@@ -39,6 +42,16 @@ class AiCase(models.Model):
         "image/tiff",
         "image/bmp",
     }
+
+    DATEV_TAX_KEYS = {0.19: "9", 0.07: "5", 0.0: "0"}
+    DATEV_TAX_ACCOUNTS = {"1576": 0.19, "1571": 0.07}
+    DATEV_CONTRA_ACCOUNTS = {"1600", "1200", "1400", "1800"}
+    DATEV_HEADER_COLUMNS = [
+        "Umsatz (Soll/Haben)", "Soll/Haben-Kennzeichen", "WKZ Umsatz",
+        "Kurs", "Basis-Umsatz", "WKZ Basis-Umsatz", "Konto",
+        "Gegenkonto (ohne BU-Schluessel)", "BU-Schluessel", "Belegdatum",
+        "Belegfeld 1", "Belegfeld 2", "Skonto", "Buchungstext",
+    ]
 
     name = fields.Char(
         string="Reference",
@@ -96,6 +109,12 @@ class AiCase(models.Model):
     move_id = fields.Many2one(
         "account.move",
         string="Journal Entry",
+    )
+    datev_file_id = fields.Many2one(
+        "ir.attachment",
+        string="DATEV Export File",
+        readonly=True,
+        copy=False,
     )
 
     @api.depends("suggestion_ids")
@@ -319,17 +338,155 @@ class AiCase(models.Model):
         self.move_id = move
         return move
 
+    # ── DATEV Export ────────────────────────────────────────────────
+
+    @staticmethod
+    def _format_datev_amount(amount):
+        """Format amount for DATEV: absolute value with German decimal comma."""
+        return ("%.2f" % abs(amount)).replace(".", ",")
+
+    def _get_datev_tax_key(self):
+        """Determine DATEV BU-Schlüssel from accounting_entry suggestion or move lines."""
+        self.ensure_one()
+        suggestion = self.suggestion_ids.filtered(
+            lambda s: s.suggestion_type == "accounting_entry"
+        )[:1]
+        if suggestion:
+            try:
+                payload = json.loads(suggestion.payload_json or "{}")
+                tax_rate = payload.get("tax_rate")
+                if tax_rate is not None:
+                    return self.DATEV_TAX_KEYS.get(tax_rate, "0")
+            except (json.JSONDecodeError, TypeError):
+                pass
+        # Fallback: detect from move line tax accounts
+        if self.move_id:
+            for line in self.move_id.line_ids:
+                account_code = line.account_id.code
+                if account_code in self.DATEV_TAX_ACCOUNTS:
+                    tax_rate = self.DATEV_TAX_ACCOUNTS[account_code]
+                    return self.DATEV_TAX_KEYS.get(tax_rate, "0")
+        return "0"
+
+    def _generate_datev_lines(self):
+        """Generate DATEV export lines as list of dicts.
+
+        Each invoice produces ONE DATEV line per expense account
+        (gross amount, expense account, contra account 1600, BU-Schlüssel).
+        """
+        self.ensure_one()
+        if not self.move_id:
+            return []
+
+        enrichment = self._get_enrichment_context()
+        invoice_number = enrichment.get("invoice_number", "")
+        invoice_date = enrichment.get("invoice_date", "")
+
+        # Format date as DDMM
+        belegdatum = ""
+        if invoice_date:
+            try:
+                dt = fields.Date.from_string(invoice_date)
+                belegdatum = dt.strftime("%d%m")
+            except (ValueError, TypeError):
+                pass
+        if not belegdatum and self.move_id.date:
+            belegdatum = self.move_id.date.strftime("%d%m")
+
+        tax_key = self._get_datev_tax_key()
+
+        # Sum all tax line amounts for gross calculation
+        tax_total = 0.0
+        for move_line in self.move_id.line_ids:
+            if move_line.account_id.code in self.DATEV_TAX_ACCOUNTS:
+                tax_total += move_line.debit + move_line.credit
+
+        # Find expense lines (not tax, not contra)
+        expense_lines = []
+        for move_line in self.move_id.line_ids:
+            account_code = move_line.account_id.code
+            if account_code not in self.DATEV_TAX_ACCOUNTS and account_code not in self.DATEV_CONTRA_ACCOUNTS:
+                expense_lines.append(move_line)
+
+        lines = []
+        expense_count = len(expense_lines)
+        for move_line in expense_lines:
+            net_amount = move_line.debit or move_line.credit
+            # Distribute tax proportionally across expense lines
+            line_tax = tax_total / expense_count if expense_count else 0.0
+            gross_amount = net_amount + line_tax
+            sh_kennzeichen = "S" if move_line.debit > 0 else "H"
+
+            lines.append({
+                "Umsatz (Soll/Haben)": self._format_datev_amount(gross_amount),
+                "Soll/Haben-Kennzeichen": sh_kennzeichen,
+                "WKZ Umsatz": "EUR",
+                "Kurs": "",
+                "Basis-Umsatz": "",
+                "WKZ Basis-Umsatz": "",
+                "Konto": move_line.account_id.code,
+                "Gegenkonto (ohne BU-Schluessel)": "1600",
+                "BU-Schluessel": tax_key,
+                "Belegdatum": belegdatum,
+                "Belegfeld 1": invoice_number or self.move_id.ref or self.name,
+                "Belegfeld 2": "",
+                "Skonto": "",
+                "Buchungstext": move_line.name or "",
+            })
+
+        return lines
+
+    def _generate_datev_csv(self, cases=None):
+        """Generate DATEV CSV string for one or more cases."""
+        if cases is None:
+            cases = self
+        output = io.StringIO()
+        writer = csv.DictWriter(
+            output,
+            fieldnames=self.DATEV_HEADER_COLUMNS,
+            delimiter=";",
+            quoting=csv.QUOTE_MINIMAL,
+        )
+        writer.writeheader()
+        for case in cases:
+            for line in case._generate_datev_lines():
+                writer.writerow(line)
+        return output.getvalue()
+
     def action_export(self):
-        """Transition from posted to exported."""
+        """Transition from posted to exported. Generates DATEV CSV attachment."""
         for record in self:
             if record.state != "posted":
                 raise UserError(
                     _("Case %s cannot be exported from state '%s'. Must be 'Posted'.")
                     % (record.name, record.state)
                 )
+            if not record.move_id:
+                raise UserError(
+                    _("Case %s has no journal entry. Cannot export without a posted entry.")
+                    % record.name
+                )
+            csv_content = record._generate_datev_csv()
+            filename = "DATEV_%s.csv" % record.name.replace("/", "_")
+            attachment = self.env["ir.attachment"].create({
+                "name": filename,
+                "datas": base64.b64encode(csv_content.encode("utf-8")),
+                "res_model": "account.ai.case",
+                "res_id": record.id,
+                "mimetype": "text/csv",
+            })
+            record.datev_file_id = attachment
             before = {"state": record.state}
             record.state = "exported"
-            record._log_audit("export", before_vals=before, after_vals={"state": "exported"})
+            record._log_audit(
+                "export",
+                before_vals=before,
+                after_vals={
+                    "state": "exported",
+                    "datev_file_id": attachment.id,
+                    "datev_filename": filename,
+                },
+            )
 
     def action_reset_to_new(self):
         """Reset from needs_attention or failed back to new."""
