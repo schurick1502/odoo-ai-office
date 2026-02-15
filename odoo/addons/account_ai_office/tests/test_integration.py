@@ -304,15 +304,15 @@ class TestKontierungIntegration(TransactionCase):
         move = case.move_id
         self.assertEqual(len(move.line_ids), 3)
 
-        expense_line = move.line_ids.filtered(lambda l: l.account_id == self.expense_account)
+        expense_line = move.line_ids.filtered(lambda rec: rec.account_id == self.expense_account)
         self.assertEqual(len(expense_line), 1)
         self.assertAlmostEqual(expense_line.debit, 100.0)
 
-        tax_line = move.line_ids.filtered(lambda l: l.account_id == self.tax_account)
+        tax_line = move.line_ids.filtered(lambda rec: rec.account_id == self.tax_account)
         self.assertEqual(len(tax_line), 1)
         self.assertAlmostEqual(tax_line.debit, 19.0)
 
-        liabilities_line = move.line_ids.filtered(lambda l: l.account_id == self.liabilities_account)
+        liabilities_line = move.line_ids.filtered(lambda rec: rec.account_id == self.liabilities_account)
         self.assertEqual(len(liabilities_line), 1)
         self.assertAlmostEqual(liabilities_line.credit, 119.0)
 
