@@ -41,9 +41,6 @@ services:
     build:
       context: ./service
       dockerfile: Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       AI_SERVICE_PORT: "8100"
     ports:
