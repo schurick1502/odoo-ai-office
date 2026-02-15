@@ -210,7 +210,7 @@ class AiCase(models.Model):
             record._log_audit("propose", before_vals=before, after_vals={"state": "proposed"})
 
     def action_approve(self):
-        """Transition from proposed to approved. Requires approver group."""
+        """Transition from proposed to approved. Requires approver group and GoBD validation."""
         if not self.env.user.has_group("account_ai_office.ai_office_approver"):
             raise UserError(_("Only users with the AI Office Approver role can approve cases."))
         for record in self:
@@ -219,6 +219,7 @@ class AiCase(models.Model):
                     _("Case %s cannot be approved from state '%s'. Must be 'Proposed'.")
                     % (record.name, record.state)
                 )
+            record._validate_gobd()
             before = {"state": record.state}
             record.state = "approved"
             record._log_audit("approve", before_vals=before, after_vals={"state": "approved"})
@@ -348,6 +349,106 @@ class AiCase(models.Model):
             before = {"state": record.state}
             record.state = "needs_attention"
             record._log_audit("needs_attention", before_vals=before, after_vals={"state": "needs_attention"})
+
+    # ── GoBD Validation ────────────────────────────────────────────────
+
+    def _get_policy_thresholds(self):
+        """Extract confidence and risk thresholds from active policies."""
+        self.ensure_one()
+        policies = self._get_active_policies()
+        thresholds = {
+            "confidence_threshold": 0.8,
+            "risk_score_max": 0.3,
+        }
+        for policy in policies:
+            rules = policy.get("rules", {})
+            if "confidence_threshold" in rules:
+                thresholds["confidence_threshold"] = rules["confidence_threshold"]
+            if "risk_score_max" in rules:
+                thresholds["risk_score_max"] = rules["risk_score_max"]
+        return thresholds
+
+    def _validate_gobd(self):
+        """Run GoBD validation checks on the case before approval.
+
+        Raises UserError with detailed message on failure.
+        """
+        self.ensure_one()
+        errors = []
+
+        suggestion = self.suggestion_ids.filtered(
+            lambda s: s.suggestion_type == "accounting_entry"
+        )[:1]
+        if not suggestion:
+            raise UserError(
+                _("GoBD validation failed for case %s: No accounting entry suggestion found.")
+                % self.name
+            )
+
+        try:
+            payload = json.loads(suggestion.payload_json or "{}")
+        except (json.JSONDecodeError, TypeError):
+            raise UserError(
+                _("GoBD validation failed for case %s: Invalid suggestion payload.") % self.name
+            )
+
+        lines = payload.get("lines", [])
+        if not lines:
+            errors.append(_("No booking lines in suggestion."))
+
+        has_verbindlichkeiten = False
+        for i, line in enumerate(lines):
+            if not line.get("account"):
+                errors.append(_("Line %d: missing account code.") % (i + 1))
+            debit = line.get("debit", 0.0)
+            credit = line.get("credit", 0.0)
+            if debit <= 0 and credit <= 0:
+                errors.append(_("Line %d: debit or credit must be > 0.") % (i + 1))
+            if not line.get("description"):
+                errors.append(_("Line %d: missing description (GoBD requires Buchungstext).") % (i + 1))
+            if line.get("account") == "1600":
+                has_verbindlichkeiten = True
+
+        total_debit = sum(line.get("debit", 0.0) for line in lines)
+        total_credit = sum(line.get("credit", 0.0) for line in lines)
+        if abs(total_debit - total_credit) > 0.01:
+            errors.append(
+                _("Entry not balanced: debit=%.2f, credit=%.2f.") % (total_debit, total_credit)
+            )
+
+        enrichment = self._get_enrichment_context()
+        move_date_str = enrichment.get("invoice_date")
+        if move_date_str:
+            try:
+                move_date = fields.Date.from_string(move_date_str)
+                today = fields.Date.context_today(self)
+                if move_date > today:
+                    errors.append(_("Invoice date %s is in the future.") % move_date_str)
+            except (ValueError, TypeError):
+                pass
+
+        if has_verbindlichkeiten and not self.partner_id:
+            errors.append(
+                _("Partner is required for Verbindlichkeiten bookings (account 1600).")
+            )
+
+        thresholds = self._get_policy_thresholds()
+        if suggestion.confidence < thresholds["confidence_threshold"]:
+            errors.append(
+                _("Confidence %.2f is below the required threshold %.2f.")
+                % (suggestion.confidence, thresholds["confidence_threshold"])
+            )
+        if suggestion.risk_score > thresholds["risk_score_max"]:
+            errors.append(
+                _("Risk score %.2f exceeds the maximum allowed %.2f.")
+                % (suggestion.risk_score, thresholds["risk_score_max"])
+            )
+
+        if errors:
+            error_list = "\n".join("- %s" % e for e in errors)
+            raise UserError(
+                _("GoBD validation failed for case %s:\n\n%s") % (self.name, error_list)
+            )
 
     # ── Service Integration ─────────────────────────────────────────────
 

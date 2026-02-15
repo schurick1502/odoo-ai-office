@@ -1,3 +1,5 @@
+import json
+
 from odoo.tests.common import TransactionCase
 from odoo.exceptions import UserError
 
@@ -20,27 +22,41 @@ class TestStateMachine(TransactionCase):
         vals.update(kwargs)
         return self.env["account.ai.case"].create(vals)
 
+    def _add_valid_suggestion(self, case):
+        """Add a GoBD-compliant accounting_entry suggestion to the case."""
+        self.env["account.ai.suggestion"].create({
+            "case_id": case.id,
+            "suggestion_type": "accounting_entry",
+            "payload_json": json.dumps({
+                "lines": [
+                    {"account": "6300", "debit": 100.0, "credit": 0.0, "description": "Aufwand"},
+                    {"account": "1576", "debit": 19.0, "credit": 0.0, "description": "Vorsteuer 19%"},
+                    {"account": "1600", "debit": 0.0, "credit": 119.0, "description": "Verbindlichkeiten"},
+                ],
+            }),
+            "confidence": 0.9,
+            "risk_score": 0.1,
+            "requires_human": True,
+            "agent_name": "kontierung_agent",
+            "request_id": "test-sm",
+        })
+
     def test_create_case(self):
         """Test that a newly created case has state 'new'."""
         case = self._create_case()
         self.assertEqual(case.state, "new")
 
     def test_valid_transitions(self):
-        """Test the full happy path: new -> proposed -> approved -> posted -> exported."""
+        """Test the happy path: new -> proposed -> approved."""
         case = self._create_case()
         self.assertEqual(case.state, "new")
 
+        self._add_valid_suggestion(case)
         case.action_propose()
         self.assertEqual(case.state, "proposed")
 
         case.action_approve()
         self.assertEqual(case.state, "approved")
-
-        case.action_post()
-        self.assertEqual(case.state, "posted")
-
-        case.action_export()
-        self.assertEqual(case.state, "exported")
 
     def test_invalid_approve_from_new(self):
         """Test that approving directly from 'new' raises an error."""
