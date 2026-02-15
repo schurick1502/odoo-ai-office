@@ -33,6 +33,7 @@ Provides a structured workflow for AI-assisted accounting:
         "views/ai_case_views.xml",
         "views/ai_suggestion_views.xml",
         "wizard/audit_log_export_views.xml",
+        "wizard/datev_export_views.xml",
         "views/ai_audit_log_views.xml",
         "views/ai_policy_views.xml",
         "views/menu.xml",
