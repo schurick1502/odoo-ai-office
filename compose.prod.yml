@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16.4-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -13,6 +13,15 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
 
   odoo:
     image: odoo:18.0
@@ -25,9 +34,9 @@ services:
       USER: ${POSTGRES_USER}
       PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "8069:8069"
+      - "${ODOO_PORT:-8069}:8069"
     volumes:
-      - ./odoo/addons:/mnt/extra-addons
+      - ./odoo/addons:/mnt/extra-addons:ro
       - odoo-filestore:/var/lib/odoo
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
@@ -36,6 +45,15 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
 
   ai_office_service:
     image: ghcr.io/schurick1502/ai-office-service:${SERVICE_VERSION:-latest}
@@ -44,14 +62,28 @@ services:
         condition: service_healthy
     environment:
       AI_SERVICE_PORT: "8100"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
     ports:
-      - "8100:8100"
+      - "${AI_SERVICE_PORT:-8100}:8100"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   pgdata:
