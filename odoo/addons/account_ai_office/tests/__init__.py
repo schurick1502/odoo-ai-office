@@ -7,3 +7,4 @@ from . import test_audit_export
 from . import test_opos
 from . import test_datev_export
 from . import test_datev_wizard
+from . import test_tax_report

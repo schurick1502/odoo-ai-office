@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_tax_report_form" model="ir.ui.view">
+        <field name="name">account.ai.tax.report.form</field>
+        <field name="model">account.ai.tax.report</field>
+        <field name="arch" type="xml">
+            <form string="Tax Report">
+                <group>
+                    <field name="period"/>
+                    <field name="report_type"/>
+                    <field name="export_format"/>
+                </group>
+                <footer>
+                    <button name="action_generate" type="object"
+                        string="Generate" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tax_report" model="ir.actions.act_window">
+        <field name="name">Tax Report (UStVA/ZM)</field>
+        <field name="res_model">account.ai.tax.report</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
