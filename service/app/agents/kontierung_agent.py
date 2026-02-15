@@ -47,7 +47,8 @@ class KontierungsAgent:
         expense_account, policy_matched = self._match_policy(policies)
 
         # Step 2: Calculate net/tax split
-        if amount_total > 0:
+        has_amount = amount_total > 0
+        if has_amount:
             net_amount = round(amount_total / (1 + tax_rate), 2)
             tax_amount = round(amount_total - net_amount, 2)
         else:
@@ -85,7 +86,7 @@ class KontierungsAgent:
             confidence = 0.92
             risk_score = 0.05
             explanation = "Kontierung via Supplier-Policy: Konto %s" % expense_account
-        elif amount_total > 0:
+        elif has_amount:
             confidence = 0.75
             risk_score = 0.15
             explanation = "Regelbasierte Kontierung (SKR03): Konto %s" % expense_account
