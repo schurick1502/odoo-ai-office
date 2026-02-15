@@ -270,6 +270,42 @@ class AiCase(models.Model):
 
     # ── Service Integration ─────────────────────────────────────────────
 
+    def _get_enrichment_context(self):
+        """Extract enrichment data from existing suggestions for orchestration context."""
+        enrichment_data = {}
+        for suggestion in self.suggestion_ids.filtered(lambda s: s.suggestion_type == "enrichment"):
+            try:
+                payload = json.loads(suggestion.payload_json or "{}")
+                field = payload.get("field", "")
+                value = payload.get("value", "")
+                if field and value:
+                    enrichment_data[field] = value
+            except (json.JSONDecodeError, TypeError):
+                continue
+        return enrichment_data
+
+    def _get_active_policies(self):
+        """Load active policies relevant to this case for service context."""
+        domain = [
+            ("is_active", "=", True),
+            "|",
+            ("company_id", "=", self.company_id.id),
+            ("company_id", "=", False),
+        ]
+        policies = self.env["account.ai.policy"].sudo().search(domain)
+        result = []
+        for policy in policies:
+            try:
+                rules = json.loads(policy.rules_json or "{}")
+            except (json.JSONDecodeError, TypeError):
+                rules = {}
+            result.append({
+                "scope": policy.scope,
+                "key": policy.key,
+                "rules": rules,
+            })
+        return result
+
     def action_run_orchestrator(self):
         """Call the AI Office Service to generate suggestions for this case."""
         self.ensure_one()
@@ -290,10 +326,12 @@ class AiCase(models.Model):
                     "case_id": self.id,
                     "request_id": request_id,
                     "context": {
+                        **self._get_enrichment_context(),
                         "partner_id": self.partner_id.id or None,
                         "partner_name": self.partner_id.name or "",
                         "period": self.period or "",
                         "company_id": self.company_id.id,
+                        "policies": self._get_active_policies(),
                     },
                 },
                 timeout=30,
