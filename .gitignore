@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Environment
+.env
+!.env.example
+
+# Odoo
+*.pyc
+filestore/
+
+# Test / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log

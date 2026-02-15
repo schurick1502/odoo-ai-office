@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_ai_case_tree" model="ir.ui.view">
+        <field name="name">account.ai.case.tree</field>
+        <field name="model">account.ai.case</field>
+        <field name="arch" type="xml">
+            <list string="AI Cases" decoration-warning="state=='needs_attention'" decoration-danger="state=='failed'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="state" widget="badge"
+                    decoration-info="state in ('new','enriched')"
+                    decoration-warning="state=='needs_attention'"
+                    decoration-success="state in ('approved','posted','exported')"
+                    decoration-danger="state=='failed'"
+                    decoration-primary="state=='proposed'"
+                />
+                <field name="period"/>
+                <field name="suggestion_count" string="Suggestions"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_ai_case_form" model="ir.ui.view">
+        <field name="name">account.ai.case.form</field>
+        <field name="model">account.ai.case</field>
+        <field name="arch" type="xml">
+            <form string="AI Case">
+                <header>
+                    <button name="action_run_orchestrator" type="object"
+                        string="Run AI" class="oe_highlight btn-primary"
+                        invisible="state not in ('new', 'enriched')"
+                        icon="fa-magic"/>
+                    <button name="action_propose" type="object"
+                        string="Propose" class="oe_highlight"
+                        invisible="state not in ('new', 'enriched')"/>
+                    <button name="action_approve" type="object"
+                        string="Approve" class="oe_highlight"
+                        invisible="state != 'proposed'"
+                        groups="account_ai_office.ai_office_approver"/>
+                    <button name="action_post" type="object"
+                        string="Post" class="oe_highlight"
+                        invisible="state != 'approved'"
+                        groups="account_ai_office.ai_office_approver"/>
+                    <button name="action_export" type="object"
+                        string="Export"
+                        invisible="state != 'posted'"/>
+                    <button name="action_reset_to_new" type="object"
+                        string="Reset to New"
+                        invisible="state not in ('needs_attention', 'failed')"/>
+                    <button name="action_needs_attention" type="object"
+                        string="Needs Attention" class="btn-secondary"
+                        invisible="state in ('needs_attention', 'exported')"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="new,proposed,approved,posted,exported"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="period"/>
+                        </group>
+                        <group>
+                            <field name="source_model"/>
+                            <field name="source_id"/>
+                            <field name="move_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Documents" name="documents">
+                            <field name="document_ids" widget="many2many_binary"/>
+                        </page>
+                        <page string="Suggestions" name="suggestions">
+                            <field name="suggestion_ids">
+                                <list editable="bottom">
+                                    <field name="suggestion_type"/>
+                                    <field name="agent_name"/>
+                                    <field name="confidence" widget="progressbar"/>
+                                    <field name="risk_score" widget="progressbar"/>
+                                    <field name="requires_human"/>
+                                    <field name="explanation_md"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Audit Trail" name="audit_trail">
+                            <field name="audit_log_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="Date"/>
+                                    <field name="actor_type"/>
+                                    <field name="actor"/>
+                                    <field name="action"/>
+                                    <field name="before_json"/>
+                                    <field name="after_json"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_ai_case_search" model="ir.ui.view">
+        <field name="name">account.ai.case.search</field>
+        <field name="model">account.ai.case</field>
+        <field name="arch" type="xml">
+            <search string="AI Cases">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="period"/>
+                <separator/>
+                <filter string="New" name="filter_new" domain="[('state', '=', 'new')]"/>
+                <filter string="Enriched" name="filter_enriched" domain="[('state', '=', 'enriched')]"/>
+                <filter string="Proposed" name="filter_proposed" domain="[('state', '=', 'proposed')]"/>
+                <filter string="Approved" name="filter_approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Posted" name="filter_posted" domain="[('state', '=', 'posted')]"/>
+                <filter string="Exported" name="filter_exported" domain="[('state', '=', 'exported')]"/>
+                <filter string="Needs Attention" name="filter_needs_attention" domain="[('state', '=', 'needs_attention')]"/>
+                <filter string="Failed" name="filter_failed" domain="[('state', '=', 'failed')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="State" name="groupby_state" context="{'group_by': 'state'}"/>
+                    <filter string="Partner" name="groupby_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Period" name="groupby_period" context="{'group_by': 'period'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: All Cases -->
+    <record id="action_ai_case_all" model="ir.actions.act_window">
+        <field name="name">Cases</field>
+        <field name="res_model">account.ai.case</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_ai_case_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No cases yet.
+            </p>
+            <p>
+                AI Office cases will appear here as documents are processed.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action: Inbox (actionable cases) -->
+    <record id="action_ai_case_inbox" model="ir.actions.act_window">
+        <field name="name">Inbox</field>
+        <field name="res_model">account.ai.case</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', 'in', ['new', 'enriched', 'proposed', 'needs_attention'])]</field>
+        <field name="search_view_id" ref="view_ai_case_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All caught up!
+            </p>
+            <p>
+                No cases require your attention right now.
+            </p>
+        </field>
+    </record>
+</odoo>

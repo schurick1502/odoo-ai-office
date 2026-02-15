@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-odoo_ai_office}
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:18.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "8169:8069"
+    volumes:
+      - ./odoo/addons:/mnt/extra-addons
+      - odoo-filestore:/var/lib/odoo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  ai_office_service:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    environment:
+      AI_SERVICE_PORT: "8100"
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./service/app:/app/app
+      - ./service/tests:/app/tests
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  odoo-filestore:

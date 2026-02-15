@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu -->
+    <menuitem
+        id="menu_ai_office_root"
+        name="AI Office"
+        web_icon="account_ai_office,static/description/icon.png"
+        sequence="90"
+    />
+
+    <!-- Submenu: Inbox -->
+    <menuitem
+        id="menu_ai_office_inbox"
+        name="Inbox"
+        parent="menu_ai_office_root"
+        action="action_ai_case_inbox"
+        sequence="10"
+    />
+
+    <!-- Submenu: Cases -->
+    <menuitem
+        id="menu_ai_office_cases"
+        name="Cases"
+        parent="menu_ai_office_root"
+        action="action_ai_case_all"
+        sequence="20"
+    />
+
+    <!-- Submenu: Suggestions -->
+    <menuitem
+        id="menu_ai_office_suggestions"
+        name="Suggestions"
+        parent="menu_ai_office_root"
+        action="action_ai_suggestion"
+        sequence="30"
+    />
+
+    <!-- Submenu: Audit Logs -->
+    <menuitem
+        id="menu_ai_office_audit_logs"
+        name="Audit Logs"
+        parent="menu_ai_office_root"
+        action="action_ai_audit_log"
+        sequence="40"
+    />
+
+    <!-- Submenu: Policies -->
+    <menuitem
+        id="menu_ai_office_policies"
+        name="Policies"
+        parent="menu_ai_office_root"
+        action="action_ai_policy"
+        sequence="50"
+    />
+
+    <!-- Submenu: Settings (admin only) -->
+    <menuitem
+        id="menu_ai_office_settings"
+        name="Settings"
+        parent="menu_ai_office_root"
+        sequence="100"
+        groups="account_ai_office.ai_office_admin"
+    />
+
+    <menuitem
+        id="menu_ai_office_settings_policies"
+        name="Policies"
+        parent="menu_ai_office_settings"
+        action="action_ai_policy"
+        sequence="10"
+    />
+</odoo>
