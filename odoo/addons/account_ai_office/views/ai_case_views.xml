@@ -51,6 +51,16 @@
                     <button name="action_export" type="object"
                         string="Export"
                         invisible="state != 'posted'"/>
+                    <button name="action_run_opos" type="object"
+                        string="Run OPOS" class="btn-secondary"
+                        invisible="state != 'posted'"
+                        icon="fa-exchange"
+                        groups="account_ai_office.ai_office_user"/>
+                    <button name="action_apply_reconciliation" type="object"
+                        string="Apply Reconciliation" class="oe_highlight"
+                        invisible="state != 'posted'"
+                        icon="fa-check-circle"
+                        groups="account_ai_office.ai_office_approver"/>
                     <button name="action_reset_to_new" type="object"
                         string="Reset to New"
                         invisible="state not in ('needs_attention', 'failed')"/>
@@ -91,6 +101,21 @@
                                     <field name="risk_score" widget="progressbar"/>
                                     <field name="requires_human"/>
                                     <field name="explanation_md"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="OPOS Matches" name="opos_matches"
+                            invisible="state not in ('posted', 'exported')">
+                            <field name="suggestion_ids"
+                                domain="[('suggestion_type', '=', 'reconciliation')]"
+                                readonly="1">
+                                <list>
+                                    <field name="agent_name"/>
+                                    <field name="confidence" widget="progressbar"/>
+                                    <field name="risk_score" widget="progressbar"/>
+                                    <field name="requires_human"/>
+                                    <field name="explanation_md"/>
+                                    <field name="create_date"/>
                                 </list>
                             </field>
                         </page>
