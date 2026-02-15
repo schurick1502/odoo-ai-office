@@ -93,8 +93,8 @@ class TestDatevWizard(TransactionCase):
 
     def test_find_cases_by_period(self):
         """_find_cases returns posted cases matching the period range."""
-        case1 = self._create_posted_case(name="WIZ-P1", period="2024-01")
-        case2 = self._create_posted_case(name="WIZ-P2", period="2024-02")
+        self._create_posted_case(name="WIZ-P1", period="2024-01")
+        self._create_posted_case(name="WIZ-P2", period="2024-02")
         self._create_posted_case(name="WIZ-P3", period="2024-06")  # Outside range
 
         wizard = self.env["account.ai.datev.export"].create({

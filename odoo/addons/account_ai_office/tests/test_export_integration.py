@@ -171,7 +171,7 @@ class TestExportIntegration(TransactionCase):
         })
         wizard.action_export()
         content = base64.b64decode(wizard.file_data).decode("utf-8")
-        lines = [l for l in content.split("\r\n") if l.strip()]
+        lines = [row for row in content.split("\r\n") if row.strip()]
         # Header + 2 data rows
         self.assertEqual(len(lines), 3)
 
