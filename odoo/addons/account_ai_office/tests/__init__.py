@@ -8,3 +8,4 @@ from . import test_opos
 from . import test_datev_export
 from . import test_datev_wizard
 from . import test_tax_report
+from . import test_export_integration
