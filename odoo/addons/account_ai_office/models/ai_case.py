@@ -93,7 +93,7 @@ class AiCase(models.Model):
     def _log_audit(self, action, before_vals=None, after_vals=None):
         """Create an audit log entry for this case."""
         self.ensure_one()
-        self.env["account.ai.audit_log"].create({
+        self.env["account.ai.audit_log"].sudo().create({
             "case_id": self.id,
             "actor_type": "user",
             "actor": self.env.user.name,
@@ -224,14 +224,15 @@ class AiCase(models.Model):
                 "request_id": request_id,
             })
 
-        # Log audit entry
+        # Log audit entry and transition state
+        before = {"state": self.state, "suggestion_count": self.suggestion_count}
+        self.state = "proposed"
         self._log_audit(
             "orchestrate",
-            before_vals={"state": self.state, "suggestion_count": self.suggestion_count},
-            after_vals={"suggestions_added": len(data.get("suggestions", [])), "request_id": request_id},
+            before_vals=before,
+            after_vals={
+                "state": "proposed",
+                "suggestions_added": len(data.get("suggestions", [])),
+                "request_id": request_id,
+            },
         )
-
-        # Transition state
-        before = {"state": self.state}
-        self.state = "proposed"
-        self._log_audit("propose", before_vals=before, after_vals={"state": "proposed"})
