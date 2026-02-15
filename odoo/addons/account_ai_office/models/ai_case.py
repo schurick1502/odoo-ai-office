@@ -333,3 +333,86 @@ class AiCase(models.Model):
                 "request_id": request_id,
             },
         )
+
+    def action_enrich(self):
+        """Call the AI Office Service to enrich this case with document metadata.
+
+        Sends document metadata to /v1/enrich and creates enrichment-type
+        suggestions from the response. Transitions state from 'new' to 'enriched'.
+        """
+        self.ensure_one()
+        if self.state != "new":
+            raise UserError(
+                _("Case %s cannot be enriched from state '%s'. Must be 'New'.")
+                % (self.name, self.state)
+            )
+
+        service_url = self.env["ir.config_parameter"].sudo().get_param(
+            "ai_office.service_url", "http://ai_office_service:8100"
+        )
+        request_id = str(uuid.uuid4())
+
+        documents = []
+        for doc in self.document_ids:
+            documents.append({
+                "filename": doc.name or "",
+                "mimetype": doc.mimetype or "",
+                "size_bytes": doc.file_size or 0,
+            })
+
+        try:
+            response = requests.post(
+                f"{service_url}/v1/enrich",
+                json={
+                    "case_id": self.id,
+                    "request_id": request_id,
+                    "documents": documents,
+                    "context": {
+                        "partner_id": self.partner_id.id or None,
+                        "partner_name": self.partner_id.name or "",
+                        "period": self.period or "",
+                        "company_id": self.company_id.id,
+                    },
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.ConnectionError:
+            raise UserError(_("Cannot connect to AI Office Service at %s") % service_url)
+        except requests.exceptions.Timeout:
+            raise UserError(_("AI Office Service timed out."))
+        except requests.exceptions.RequestException as e:
+            raise UserError(_("AI Office Service error: %s") % str(e))
+
+        for suggestion in data.get("suggestions", []):
+            self.env["account.ai.suggestion"].create({
+                "case_id": self.id,
+                "suggestion_type": "enrichment",
+                "payload_json": json.dumps({
+                    "field": suggestion.get("field", ""),
+                    "value": suggestion.get("value", ""),
+                }),
+                "confidence": suggestion.get("confidence", 0.0),
+                "risk_score": 0.0,
+                "explanation_md": "Extracted `%s` = `%s` (source: %s)" % (
+                    suggestion.get("field", ""),
+                    suggestion.get("value", ""),
+                    suggestion.get("source", "unknown"),
+                ),
+                "requires_human": True,
+                "agent_name": "enrichment_agent",
+                "request_id": request_id,
+            })
+
+        before = {"state": self.state, "suggestion_count": self.suggestion_count}
+        self.state = "enriched"
+        self._log_audit(
+            "enrich",
+            before_vals=before,
+            after_vals={
+                "state": "enriched",
+                "enrichment_suggestions": len(data.get("suggestions", [])),
+                "request_id": request_id,
+            },
+        )
