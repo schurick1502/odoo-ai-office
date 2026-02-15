@@ -224,7 +224,7 @@ class AiCase(models.Model):
             record._log_audit("approve", before_vals=before, after_vals={"state": "approved"})
 
     def action_post(self):
-        """Transition from approved to posted. Requires approver group."""
+        """Transition from approved to posted. Creates account.move. Requires approver group."""
         if not self.env.user.has_group("account_ai_office.ai_office_approver"):
             raise UserError(_("Only users with the AI Office Approver role can post cases."))
         for record in self:
@@ -233,9 +233,90 @@ class AiCase(models.Model):
                     _("Case %s cannot be posted from state '%s'. Must be 'Approved'.")
                     % (record.name, record.state)
                 )
+            move = record._create_move_from_suggestion()
             before = {"state": record.state}
             record.state = "posted"
-            record._log_audit("post", before_vals=before, after_vals={"state": "posted"})
+            record._log_audit(
+                "post",
+                before_vals=before,
+                after_vals={
+                    "state": "posted",
+                    "move_id": move.id,
+                    "move_name": move.name,
+                },
+            )
+
+    def _create_move_from_suggestion(self):
+        """Create an account.move from the first accounting_entry suggestion.
+
+        Returns the created account.move record.
+        Raises UserError if no suitable suggestion is found or accounts cannot be resolved.
+        """
+        self.ensure_one()
+        suggestion = self.suggestion_ids.filtered(
+            lambda s: s.suggestion_type == "accounting_entry"
+        )[:1]
+        if not suggestion:
+            raise UserError(
+                _("Case %s has no accounting entry suggestion to post.") % self.name
+            )
+
+        try:
+            payload = json.loads(suggestion.payload_json or "{}")
+        except (json.JSONDecodeError, TypeError):
+            raise UserError(_("Invalid suggestion payload for case %s.") % self.name)
+
+        lines = payload.get("lines", [])
+        if not lines:
+            raise UserError(_("Suggestion for case %s has no booking lines.") % self.name)
+
+        # Determine journal: purchase journal of the company
+        journal = self.env["account.journal"].search([
+            ("type", "=", "purchase"),
+            ("company_id", "=", self.company_id.id),
+        ], limit=1)
+        if not journal:
+            journal = self.env["account.journal"].search([
+                ("company_id", "=", self.company_id.id),
+            ], limit=1)
+        if not journal:
+            raise UserError(_("No journal found for company %s.") % self.company_id.name)
+
+        # Determine date from enrichment context or today
+        enrichment = self._get_enrichment_context()
+        move_date = enrichment.get("invoice_date") or fields.Date.context_today(self)
+
+        # Build move lines
+        move_lines = []
+        for line in lines:
+            account_code = line.get("account", "")
+            account = self.env["account.account"].search([
+                ("code", "=", account_code),
+                ("company_id", "=", self.company_id.id),
+            ], limit=1)
+            if not account:
+                raise UserError(
+                    _("Account '%s' not found for company %s.")
+                    % (account_code, self.company_id.name)
+                )
+            move_lines.append((0, 0, {
+                "account_id": account.id,
+                "name": line.get("description", ""),
+                "debit": line.get("debit", 0.0),
+                "credit": line.get("credit", 0.0),
+                "partner_id": self.partner_id.id or False,
+            }))
+
+        move = self.env["account.move"].create({
+            "journal_id": journal.id,
+            "date": move_date,
+            "ref": self.name,
+            "partner_id": self.partner_id.id or False,
+            "line_ids": move_lines,
+            "move_type": "entry",
+        })
+        self.move_id = move
+        return move
 
     def action_export(self):
         """Transition from posted to exported."""
