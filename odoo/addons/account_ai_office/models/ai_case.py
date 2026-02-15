@@ -636,3 +636,174 @@ class AiCase(models.Model):
                 "request_id": request_id,
             },
         )
+
+    # ── OPOS (Open Item Reconciliation) ──────────────────────────────
+
+    def _get_open_lines(self):
+        """Fetch unreconciled move lines for the case's partner on payable/receivable accounts."""
+        self.ensure_one()
+        if not self.partner_id:
+            return []
+
+        domain = [
+            ("partner_id", "=", self.partner_id.id),
+            ("reconciled", "=", False),
+            ("amount_residual", "!=", 0),
+            ("company_id", "=", self.company_id.id),
+            ("account_id.account_type", "in", ["liability_payable", "asset_receivable"]),
+        ]
+        move_lines = self.env["account.move.line"].search(domain)
+        result = []
+        for ml in move_lines:
+            result.append({
+                "id": ml.id,
+                "date": str(ml.date),
+                "ref": ml.ref or ml.move_id.ref or "",
+                "name": ml.name or "",
+                "balance": ml.balance,
+                "amount_residual": ml.amount_residual,
+                "account_code": ml.account_id.code,
+                "move_name": ml.move_id.name or "",
+            })
+        return result
+
+    def action_run_opos(self):
+        """Call the AI Office Service to find matching open items for reconciliation."""
+        self.ensure_one()
+        if self.state != "posted":
+            raise UserError(
+                _("OPOS can only be run on cases in 'Posted' state.")
+            )
+        if not self.move_id:
+            raise UserError(
+                _("Case %s has no journal entry. Post the case first.") % self.name
+            )
+
+        open_lines = self._get_open_lines()
+        if not open_lines:
+            raise UserError(
+                _("No open items found for partner %s.") % (self.partner_id.name or "unknown")
+            )
+
+        service_url = self.env["ir.config_parameter"].sudo().get_param(
+            "ai_office.service_url", "http://ai_office_service:8100"
+        )
+        request_id = str(uuid.uuid4())
+
+        try:
+            response = requests.post(
+                f"{service_url}/v1/opos/match",
+                json={
+                    "case_id": self.id,
+                    "request_id": request_id,
+                    "context": {
+                        "open_lines": open_lines,
+                        "partner_id": self.partner_id.id or None,
+                        "partner_name": self.partner_id.name or "",
+                    },
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.ConnectionError:
+            raise UserError(_("Cannot connect to AI Office Service at %s") % service_url)
+        except requests.exceptions.Timeout:
+            raise UserError(_("AI Office Service timed out."))
+        except requests.exceptions.RequestException as e:
+            raise UserError(_("AI Office Service error: %s") % str(e))
+
+        for suggestion in data.get("suggestions", []):
+            self.env["account.ai.suggestion"].create({
+                "case_id": self.id,
+                "suggestion_type": suggestion.get("suggestion_type", "reconciliation"),
+                "payload_json": json.dumps(suggestion.get("payload", {})),
+                "confidence": suggestion.get("confidence", 0.0),
+                "risk_score": suggestion.get("risk_score", 0.0),
+                "explanation_md": suggestion.get("explanation", ""),
+                "requires_human": suggestion.get("requires_human", True),
+                "agent_name": suggestion.get("agent_name", ""),
+                "request_id": request_id,
+            })
+
+        self._log_audit(
+            "opos_match",
+            before_vals={"suggestion_count": self.suggestion_count},
+            after_vals={
+                "suggestions_added": len(data.get("suggestions", [])),
+                "open_lines_sent": len(open_lines),
+                "request_id": request_id,
+            },
+        )
+
+    def action_apply_reconciliation(self):
+        """Apply reconciliation suggestions using Odoo's standard reconcile() API."""
+        if not self.env.user.has_group("account_ai_office.ai_office_approver"):
+            raise UserError(
+                _("Only users with the AI Office Approver role can apply reconciliation.")
+            )
+        self.ensure_one()
+        if self.state != "posted":
+            raise UserError(
+                _("Reconciliation can only be applied on cases in 'Posted' state.")
+            )
+
+        recon_suggestions = self.suggestion_ids.filtered(
+            lambda s: s.suggestion_type == "reconciliation"
+        )
+        if not recon_suggestions:
+            raise UserError(
+                _("Case %s has no reconciliation suggestions. Run OPOS first.") % self.name
+            )
+
+        applied_count = 0
+        errors = []
+        for suggestion in recon_suggestions:
+            try:
+                payload = json.loads(suggestion.payload_json or "{}")
+            except (json.JSONDecodeError, TypeError):
+                errors.append(_("Invalid reconciliation payload."))
+                continue
+
+            for match in payload.get("matches", []):
+                debit_line_id = match.get("debit_line_id")
+                credit_line_id = match.get("credit_line_id")
+                if not debit_line_id or not credit_line_id:
+                    errors.append(_("Match missing line IDs."))
+                    continue
+
+                lines = self.env["account.move.line"].browse(
+                    [debit_line_id, credit_line_id]
+                ).exists()
+                if len(lines) != 2:
+                    errors.append(
+                        _("Move lines %s/%s not found.") % (debit_line_id, credit_line_id)
+                    )
+                    continue
+
+                if all(rec.reconciled for rec in lines):
+                    continue
+
+                try:
+                    lines.reconcile()
+                    applied_count += 1
+                except Exception as e:
+                    errors.append(
+                        _("Reconciliation failed for lines %s/%s: %s")
+                        % (debit_line_id, credit_line_id, str(e))
+                    )
+
+        self._log_audit(
+            "reconciliation_applied",
+            before_vals={"reconciliation_suggestions": len(recon_suggestions)},
+            after_vals={
+                "applied_count": applied_count,
+                "errors": errors,
+            },
+        )
+
+        if errors:
+            raise UserError(
+                _("Reconciliation completed with errors:\n\n%s")
+                % "\n".join("- %s" % e for e in errors)
+            )

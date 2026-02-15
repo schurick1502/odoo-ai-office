@@ -18,6 +18,7 @@ class AiSuggestion(models.Model):
             ("classification", "Classification"),
             ("enrichment", "Enrichment"),
             ("validation", "Validation"),
+            ("reconciliation", "Reconciliation"),
         ],
         string="Type",
     )
