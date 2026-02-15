@@ -6,6 +6,11 @@
         <field name="model">account.ai.audit_log</field>
         <field name="arch" type="xml">
             <tree string="AI Audit Logs" create="0" delete="0">
+                <header>
+                    <button name="%(action_audit_log_export)d" type="action"
+                        string="Export" class="btn-secondary"
+                        groups="account_ai_office.ai_office_approver"/>
+                </header>
                 <field name="create_date" string="Date"/>
                 <field name="case_id"/>
                 <field name="actor_type"/>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_audit_log_export_form" model="ir.ui.view">
+        <field name="name">account.ai.audit_log.export.form</field>
+        <field name="model">account.ai.audit_log.export</field>
+        <field name="arch" type="xml">
+            <form string="Export Audit Logs">
+                <group>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="export_format"/>
+                </group>
+                <footer>
+                    <button name="action_export" type="object"
+                        string="Export" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_audit_log_export" model="ir.actions.act_window">
+        <field name="name">Export Audit Logs</field>
+        <field name="res_model">account.ai.audit_log.export</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
