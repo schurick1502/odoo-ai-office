@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch, MagicMock
 
 from odoo.tests.common import TransactionCase
@@ -191,3 +192,196 @@ class TestEnrichIntegration(TransactionCase):
                 case.action_enrich()
 
         self.assertEqual(case.state, "new")
+
+
+class TestKontierungIntegration(TransactionCase):
+    """Test the full kontierung workflow: orchestrate → approve → post → move."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.approver_group = cls.env.ref("account_ai_office.ai_office_approver")
+        cls.env.user.groups_id = [(4, cls.approver_group.id)]
+
+        # Ensure purchase journal exists
+        cls.journal = cls.env["account.journal"].search([
+            ("type", "=", "purchase"),
+            ("company_id", "=", cls.env.company.id),
+        ], limit=1)
+        if not cls.journal:
+            cls.journal = cls.env["account.journal"].create({
+                "name": "Purchase Journal (Test)",
+                "type": "purchase",
+                "code": "TPUR",
+                "company_id": cls.env.company.id,
+            })
+
+        # Ensure required accounts exist
+        cls.expense_account = cls.env["account.account"].search([
+            ("code", "=", "6300"),
+            ("company_id", "=", cls.env.company.id),
+        ], limit=1)
+        if not cls.expense_account:
+            cls.expense_account = cls.env["account.account"].create({
+                "code": "6300",
+                "name": "Sonstige betriebliche Aufwendungen",
+                "company_id": cls.env.company.id,
+                "account_type": "expense",
+            })
+
+        cls.tax_account = cls.env["account.account"].search([
+            ("code", "=", "1576"),
+            ("company_id", "=", cls.env.company.id),
+        ], limit=1)
+        if not cls.tax_account:
+            cls.tax_account = cls.env["account.account"].create({
+                "code": "1576",
+                "name": "Abziehbare Vorsteuer 19%",
+                "company_id": cls.env.company.id,
+                "account_type": "asset_current",
+            })
+
+        cls.liabilities_account = cls.env["account.account"].search([
+            ("code", "=", "1600"),
+            ("company_id", "=", cls.env.company.id),
+        ], limit=1)
+        if not cls.liabilities_account:
+            cls.liabilities_account = cls.env["account.account"].create({
+                "code": "1600",
+                "name": "Verbindlichkeiten aus L.u.L.",
+                "company_id": cls.env.company.id,
+                "account_type": "liability_current",
+            })
+
+    def _create_case_with_suggestion(self):
+        """Create a case with a ready-to-post accounting_entry suggestion."""
+        case = self.env["account.ai.case"].create({
+            "name": "KONT-001",
+            "period": "2024-01",
+        })
+        self.env["account.ai.suggestion"].create({
+            "case_id": case.id,
+            "suggestion_type": "accounting_entry",
+            "payload_json": json.dumps({
+                "lines": [
+                    {"account": "6300", "debit": 100.0, "credit": 0.0, "description": "Aufwand"},
+                    {"account": "1576", "debit": 19.0, "credit": 0.0, "description": "Vorsteuer 19%"},
+                    {"account": "1600", "debit": 0.0, "credit": 119.0, "description": "Verbindlichkeiten"},
+                ],
+                "amount": 119.0,
+                "net_amount": 100.0,
+                "tax_amount": 19.0,
+                "tax_rate": 0.19,
+                "expense_account": "6300",
+                "skr_chart": "SKR03",
+                "policy_matched": False,
+            }),
+            "confidence": 0.75,
+            "risk_score": 0.15,
+            "explanation_md": "Test kontierung",
+            "requires_human": True,
+            "agent_name": "kontierung_agent",
+            "request_id": "test-req-001",
+        })
+        return case
+
+    def test_post_creates_move(self):
+        """action_post creates an account.move from the suggestion."""
+        case = self._create_case_with_suggestion()
+        case.state = "approved"
+        case.action_post()
+
+        self.assertEqual(case.state, "posted")
+        self.assertTrue(case.move_id)
+        self.assertEqual(case.move_id.ref, "KONT-001")
+
+    def test_move_has_correct_lines(self):
+        """Created move has 3 lines with correct debit/credit."""
+        case = self._create_case_with_suggestion()
+        case.state = "approved"
+        case.action_post()
+
+        move = case.move_id
+        self.assertEqual(len(move.line_ids), 3)
+
+        expense_line = move.line_ids.filtered(lambda rec: rec.account_id == self.expense_account)
+        self.assertEqual(len(expense_line), 1)
+        self.assertAlmostEqual(expense_line.debit, 100.0)
+
+        tax_line = move.line_ids.filtered(lambda rec: rec.account_id == self.tax_account)
+        self.assertEqual(len(tax_line), 1)
+        self.assertAlmostEqual(tax_line.debit, 19.0)
+
+        liabilities_line = move.line_ids.filtered(lambda rec: rec.account_id == self.liabilities_account)
+        self.assertEqual(len(liabilities_line), 1)
+        self.assertAlmostEqual(liabilities_line.credit, 119.0)
+
+    def test_post_audit_log_has_move_id(self):
+        """Audit log from post contains the move_id."""
+        case = self._create_case_with_suggestion()
+        case.state = "approved"
+        case.action_post()
+
+        post_log = case.audit_log_ids.filtered(lambda rec: rec.action == "post")
+        self.assertEqual(len(post_log), 1)
+        after = json.loads(post_log.after_json)
+        self.assertEqual(after["move_id"], case.move_id.id)
+
+    def test_post_without_suggestion_raises(self):
+        """action_post raises UserError if no accounting_entry suggestion exists."""
+        case = self.env["account.ai.case"].create({
+            "name": "KONT-EMPTY",
+            "period": "2024-01",
+        })
+        case.state = "approved"
+        with self.assertRaises(UserError):
+            case.action_post()
+
+    def test_post_with_missing_account_raises(self):
+        """action_post raises UserError if an account code cannot be resolved."""
+        case = self.env["account.ai.case"].create({
+            "name": "KONT-BAD",
+            "period": "2024-01",
+        })
+        self.env["account.ai.suggestion"].create({
+            "case_id": case.id,
+            "suggestion_type": "accounting_entry",
+            "payload_json": json.dumps({
+                "lines": [
+                    {"account": "9999", "debit": 100.0, "credit": 0.0, "description": "Unknown"},
+                ],
+            }),
+            "confidence": 0.5,
+            "risk_score": 0.5,
+            "requires_human": True,
+            "agent_name": "test",
+            "request_id": "test-bad",
+        })
+        case.state = "approved"
+        with self.assertRaises(UserError):
+            case.action_post()
+
+    def test_orchestrate_sends_policies(self):
+        """action_run_orchestrator includes policies in the context."""
+        case = self.env["account.ai.case"].create({
+            "name": "KONT-POL",
+            "period": "2024-01",
+        })
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "case_id": case.id,
+            "request_id": "test-pol",
+            "suggestions": [],
+            "status": "ok",
+        }
+        mock_resp.raise_for_status = MagicMock()
+
+        with patch("odoo.addons.account_ai_office.models.ai_case.requests.post", return_value=mock_resp) as mock_post:
+            case.action_run_orchestrator()
+
+        call_args = mock_post.call_args
+        context = call_args.kwargs.get("json", call_args[1].get("json", {})).get("context", {})
+        self.assertIn("policies", context)
+        self.assertIsInstance(context["policies"], list)

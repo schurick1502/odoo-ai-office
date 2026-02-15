@@ -75,7 +75,7 @@
                         <group>
                             <field name="source_model"/>
                             <field name="source_id"/>
-                            <field name="move_id"/>
+                            <field name="move_id" readonly="1"/>
                         </group>
                     </group>
                     <notebook>

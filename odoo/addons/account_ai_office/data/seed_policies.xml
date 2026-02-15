@@ -15,5 +15,22 @@
             <field name="version">1</field>
             <field name="is_active" eval="True"/>
         </record>
+
+        <record id="policy_example_supplier" model="account.ai.policy">
+            <field name="name">Example Supplier Policy (EDV)</field>
+            <field name="scope">supplier</field>
+            <field name="key">supplier_edv_example</field>
+            <field name="rules_json">{
+    "default_account": "4946",
+    "account_mapping": {
+        "hardware": "0420",
+        "software": "4946",
+        "support": "4950"
+    },
+    "description": "EDV-Dienstleister: Standard auf Konto 4946 (EDV-Kosten)"
+}</field>
+            <field name="version">1</field>
+            <field name="is_active" eval="True"/>
+        </record>
     </data>
 </odoo>
