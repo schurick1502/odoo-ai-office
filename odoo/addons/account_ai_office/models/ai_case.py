@@ -6,6 +6,7 @@ import requests
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.tools import email_split
 
 _logger = logging.getLogger(__name__)
 
@@ -15,6 +16,8 @@ class AiCase(models.Model):
     _description = "AI Office Case"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
+
+    _mail_post_access = "read"
 
     STATES = [
         ("new", "New"),
@@ -26,6 +29,16 @@ class AiCase(models.Model):
         ("needs_attention", "Needs Attention"),
         ("failed", "Failed"),
     ]
+
+    ALLOWED_ATTACHMENT_MIMETYPES = {
+        "application/pdf",
+        "application/xml",
+        "text/xml",
+        "image/png",
+        "image/jpeg",
+        "image/tiff",
+        "image/bmp",
+    }
 
     name = fields.Char(
         string="Reference",
@@ -90,17 +103,99 @@ class AiCase(models.Model):
         for record in self:
             record.suggestion_count = len(record.suggestion_ids)
 
-    def _log_audit(self, action, before_vals=None, after_vals=None):
+    # ── Audit ───────────────────────────────────────────────────────────
+
+    def _log_audit(self, action, before_vals=None, after_vals=None,
+                   actor_type="user", actor=None):
         """Create an audit log entry for this case."""
         self.ensure_one()
         self.env["account.ai.audit_log"].sudo().create({
             "case_id": self.id,
-            "actor_type": "user",
-            "actor": self.env.user.name,
+            "actor_type": actor_type,
+            "actor": actor or self.env.user.name,
             "action": action,
             "before_json": json.dumps(before_vals) if before_vals else False,
             "after_json": json.dumps(after_vals) if after_vals else False,
         })
+
+    # ── Email Intake ────────────────────────────────────────────────────
+
+    @api.model
+    def message_new(self, msg_dict, custom_values=None):
+        """Create a new AI case from an incoming email.
+
+        Called by the mail system when an email arrives at the configured
+        alias. Extracts attachments, matches/creates a partner from the
+        sender email, and logs an audit entry.
+        """
+        defaults = dict(custom_values or {})
+        # Create the case via super() (handles mail.thread logic)
+        case = super().message_new(msg_dict, custom_values=defaults)
+
+        # Find or create partner from sender email
+        email_from = msg_dict.get("email_from", "")
+        if email_from:
+            parsed = email_split(email_from)
+            email_addr = parsed[0] if parsed else ""
+            # Extract display name from "Name <email>" format
+            display_name = email_from.split("<")[0].strip().strip('"') if "<" in email_from else ""
+            partner = case._get_or_create_partner(email_addr, name=display_name)
+            if partner:
+                case.partner_id = partner
+
+        # Filter and link document attachments from the email message
+        if case.message_ids:
+            all_attachments = case.message_ids[0].attachment_ids
+            valid_attachments = case._filter_attachments(all_attachments)
+            if valid_attachments:
+                case.document_ids = [(6, 0, valid_attachments.ids)]
+
+        # Audit log: agent-type entry for automated intake
+        case._log_audit(
+            "email_intake",
+            after_vals={
+                "state": "new",
+                "partner_id": case.partner_id.id or None,
+                "partner_name": case.partner_id.name or "",
+                "document_count": len(case.document_ids),
+                "email_from": email_from,
+            },
+            actor_type="agent",
+            actor="mail_intake",
+        )
+
+        return case
+
+    def _get_or_create_partner(self, email, name=None):
+        """Find existing partner by email or create a new supplier.
+
+        Returns a res.partner recordset (may be empty if email is falsy).
+        """
+        if not email:
+            return self.env["res.partner"]
+
+        email = email.strip().lower()
+        partner = self.env["res.partner"].search([
+            ("email", "=ilike", email),
+        ], limit=1)
+
+        if not partner:
+            partner = self.env["res.partner"].create({
+                "name": name or email,
+                "email": email,
+                "supplier_rank": 1,
+                "company_id": self.env.company.id,
+            })
+
+        return partner
+
+    def _filter_attachments(self, attachment_ids):
+        """Filter attachments to only accepted MIME types."""
+        return attachment_ids.filtered(
+            lambda att: att.mimetype in self.ALLOWED_ATTACHMENT_MIMETYPES
+        )
+
+    # ── State Transitions ───────────────────────────────────────────────
 
     def action_propose(self):
         """Transition from new/enriched to proposed."""
@@ -172,6 +267,8 @@ class AiCase(models.Model):
             before = {"state": record.state}
             record.state = "needs_attention"
             record._log_audit("needs_attention", before_vals=before, after_vals={"state": "needs_attention"})
+
+    # ── Service Integration ─────────────────────────────────────────────
 
     def action_run_orchestrator(self):
         """Call the AI Office Service to generate suggestions for this case."""
