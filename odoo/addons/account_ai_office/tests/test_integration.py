@@ -64,7 +64,7 @@ class TestIntegration(TransactionCase):
         with patch("odoo.addons.account_ai_office.models.ai_case.requests.post", return_value=mock_resp):
             case.action_run_orchestrator()
 
-        orchestrate_logs = case.audit_log_ids.filtered(lambda l: l.action == "orchestrate")
+        orchestrate_logs = case.audit_log_ids.filtered(lambda rec: rec.action == "orchestrate")
         self.assertEqual(len(orchestrate_logs), 1)
 
     def test_run_orchestrator_connection_error(self):
