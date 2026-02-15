@@ -26,7 +26,7 @@ services:
       USER: ${POSTGRES_USER:-odoo}
       PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "8069:8069"
+      - "8169:8069"
     volumes:
       - ./odoo/addons:/mnt/extra-addons
       - odoo-filestore:/var/lib/odoo
@@ -47,6 +47,7 @@ services:
       - "8100:8100"
     volumes:
       - ./service/app:/app/app
+      - ./service/tests:/app/tests
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
       interval: 10s

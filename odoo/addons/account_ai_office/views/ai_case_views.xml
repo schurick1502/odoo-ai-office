@@ -5,7 +5,7 @@
         <field name="name">account.ai.case.tree</field>
         <field name="model">account.ai.case</field>
         <field name="arch" type="xml">
-            <tree string="AI Cases" decoration-warning="state=='needs_attention'" decoration-danger="state=='failed'">
+            <list string="AI Cases" decoration-warning="state=='needs_attention'" decoration-danger="state=='failed'">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="state" widget="badge"
@@ -18,7 +18,7 @@
                 <field name="period"/>
                 <field name="suggestion_count" string="Suggestions"/>
                 <field name="create_date"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -80,26 +80,26 @@
                         </page>
                         <page string="Suggestions" name="suggestions">
                             <field name="suggestion_ids">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="suggestion_type"/>
                                     <field name="agent_name"/>
                                     <field name="confidence" widget="progressbar"/>
                                     <field name="risk_score" widget="progressbar"/>
                                     <field name="requires_human"/>
                                     <field name="explanation_md"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         <page string="Audit Trail" name="audit_trail">
                             <field name="audit_log_ids" readonly="1">
-                                <tree>
+                                <list>
                                     <field name="create_date" string="Date"/>
                                     <field name="actor_type"/>
                                     <field name="actor"/>
                                     <field name="action"/>
                                     <field name="before_json"/>
                                     <field name="after_json"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
