@@ -11,3 +11,5 @@ access_ai_audit_log_admin,account.ai.audit_log.admin,model_account_ai_audit_log,
 access_ai_policy_user,account.ai.policy.user,model_account_ai_policy,ai_office_user,1,0,0,0
 access_ai_policy_approver,account.ai.policy.approver,model_account_ai_policy,ai_office_approver,1,0,0,0
 access_ai_policy_admin,account.ai.policy.admin,model_account_ai_policy,ai_office_admin,1,1,1,1
+access_ai_audit_log_export_approver,account.ai.audit_log.export.approver,model_account_ai_audit_log_export,ai_office_approver,1,1,1,1
+access_ai_audit_log_export_admin,account.ai.audit_log.export.admin,model_account_ai_audit_log_export,ai_office_admin,1,1,1,1
