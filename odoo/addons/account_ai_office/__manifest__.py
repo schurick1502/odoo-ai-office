@@ -19,6 +19,7 @@ Provides a structured workflow for AI-assisted accounting:
         "base",
         "account",
         "mail",
+        "fetchmail",
     ],
     "external_dependencies": {
         "python": ["requests"],
@@ -28,6 +29,7 @@ Provides a structured workflow for AI-assisted accounting:
         "security/ir.model.access.csv",
         "data/sequence.xml",
         "data/seed_policies.xml",
+        "data/mail_alias.xml",
         "views/ai_case_views.xml",
         "views/ai_suggestion_views.xml",
         "views/ai_audit_log_views.xml",
