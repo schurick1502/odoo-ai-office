@@ -29,6 +29,10 @@
         <field name="arch" type="xml">
             <form string="AI Case">
                 <header>
+                    <button name="action_enrich" type="object"
+                        string="Enrich" class="oe_highlight btn-secondary"
+                        invisible="state != 'new'"
+                        icon="fa-search-plus"/>
                     <button name="action_run_orchestrator" type="object"
                         string="Run AI" class="oe_highlight btn-primary"
                         invisible="state not in ('new', 'enriched')"
