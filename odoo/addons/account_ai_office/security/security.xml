@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Module Category -->
+    <record id="module_category_ai_office" model="ir.module.category">
+        <field name="name">AI Office</field>
+        <field name="description">AI-powered accounting office framework.</field>
+        <field name="sequence">50</field>
+    </record>
+
+    <!-- Groups -->
+    <record id="ai_office_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="module_category_ai_office"/>
+        <field name="comment">Basic access to AI Office cases and suggestions.</field>
+    </record>
+
+    <record id="ai_office_approver" model="res.groups">
+        <field name="name">Approver</field>
+        <field name="category_id" ref="module_category_ai_office"/>
+        <field name="implied_ids" eval="[(4, ref('ai_office_user'))]"/>
+        <field name="comment">Can approve and post AI Office cases.</field>
+    </record>
+
+    <record id="ai_office_admin" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="category_id" ref="module_category_ai_office"/>
+        <field name="implied_ids" eval="[(4, ref('ai_office_approver'))]"/>
+        <field name="comment">Full administrative access to AI Office.</field>
+    </record>
+
+    <!-- Record Rules: Company-based multi-company security -->
+
+    <!-- Cases: users see own company only -->
+    <record id="ai_case_company_rule" model="ir.rule">
+        <field name="name">AI Case: Company Rule</field>
+        <field name="model_id" ref="model_account_ai_case"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('ai_office_user'))]"/>
+    </record>
+
+    <!-- Suggestions: users see own company only -->
+    <record id="ai_suggestion_company_rule" model="ir.rule">
+        <field name="name">AI Suggestion: Company Rule</field>
+        <field name="model_id" ref="model_account_ai_suggestion"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('ai_office_user'))]"/>
+    </record>
+
+    <!-- Audit Logs: users see own company only -->
+    <record id="ai_audit_log_company_rule" model="ir.rule">
+        <field name="name">AI Audit Log: Company Rule</field>
+        <field name="model_id" ref="model_account_ai_audit_log"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('ai_office_user'))]"/>
+    </record>
+
+    <!-- Policies: users see own company or global (no company) -->
+    <record id="ai_policy_company_rule" model="ir.rule">
+        <field name="name">AI Policy: Company Rule</field>
+        <field name="model_id" ref="model_account_ai_policy"/>
+        <field name="domain_force">['|', ('company_id', 'in', company_ids), ('company_id', '=', False)]</field>
+        <field name="groups" eval="[(4, ref('ai_office_user'))]"/>
+    </record>
+</odoo>

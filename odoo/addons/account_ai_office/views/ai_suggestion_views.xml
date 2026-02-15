@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_ai_suggestion_tree" model="ir.ui.view">
+        <field name="name">account.ai.suggestion.tree</field>
+        <field name="model">account.ai.suggestion</field>
+        <field name="arch" type="xml">
+            <tree string="AI Suggestions">
+                <field name="case_id"/>
+                <field name="suggestion_type"/>
+                <field name="agent_name"/>
+                <field name="confidence" widget="progressbar"/>
+                <field name="risk_score" widget="progressbar"/>
+                <field name="requires_human"/>
+                <field name="request_id"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_ai_suggestion_form" model="ir.ui.view">
+        <field name="name">account.ai.suggestion.form</field>
+        <field name="model">account.ai.suggestion</field>
+        <field name="arch" type="xml">
+            <form string="AI Suggestion">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="case_id"/>
+                            <field name="suggestion_type"/>
+                            <field name="agent_name"/>
+                            <field name="request_id"/>
+                        </group>
+                        <group>
+                            <field name="confidence"/>
+                            <field name="risk_score"/>
+                            <field name="requires_human"/>
+                        </group>
+                    </group>
+                    <separator string="Payload (JSON)"/>
+                    <field name="payload_json"/>
+                    <separator string="Explanation"/>
+                    <field name="explanation_md"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_ai_suggestion" model="ir.actions.act_window">
+        <field name="name">Suggestions</field>
+        <field name="res_model">account.ai.suggestion</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No suggestions yet.
+            </p>
+            <p>
+                AI-generated suggestions will appear here.
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_case_user,account.ai.case.user,model_account_ai_case,ai_office_user,1,1,1,0
+access_ai_case_approver,account.ai.case.approver,model_account_ai_case,ai_office_approver,1,1,1,0
+access_ai_case_admin,account.ai.case.admin,model_account_ai_case,ai_office_admin,1,1,1,1
+access_ai_suggestion_user,account.ai.suggestion.user,model_account_ai_suggestion,ai_office_user,1,1,1,0
+access_ai_suggestion_approver,account.ai.suggestion.approver,model_account_ai_suggestion,ai_office_approver,1,1,1,0
+access_ai_suggestion_admin,account.ai.suggestion.admin,model_account_ai_suggestion,ai_office_admin,1,1,1,1
+access_ai_audit_log_user,account.ai.audit_log.user,model_account_ai_audit_log,ai_office_user,1,0,0,0
+access_ai_audit_log_approver,account.ai.audit_log.approver,model_account_ai_audit_log,ai_office_approver,1,0,0,0
+access_ai_audit_log_admin,account.ai.audit_log.admin,model_account_ai_audit_log,ai_office_admin,1,1,1,1
+access_ai_policy_user,account.ai.policy.user,model_account_ai_policy,ai_office_user,1,0,0,0
+access_ai_policy_approver,account.ai.policy.approver,model_account_ai_policy,ai_office_approver,1,0,0,0
+access_ai_policy_admin,account.ai.policy.admin,model_account_ai_policy,ai_office_admin,1,1,1,1

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="policy_default_threshold" model="account.ai.policy">
+            <field name="name">Default Threshold Policy</field>
+            <field name="scope">company</field>
+            <field name="key">default_threshold</field>
+            <field name="rules_json">{
+    "confidence_threshold": 0.8,
+    "risk_score_max": 0.3,
+    "auto_approve": false,
+    "require_human_review_above_risk": 0.5,
+    "max_suggestions_per_case": 10
+}</field>
+            <field name="version">1</field>
+            <field name="is_active" eval="True"/>
+        </record>
+    </data>
+</odoo>
