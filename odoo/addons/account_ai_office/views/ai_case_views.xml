@@ -29,6 +29,10 @@
         <field name="arch" type="xml">
             <form string="AI Case">
                 <header>
+                    <button name="action_run_orchestrator" type="object"
+                        string="Run AI" class="oe_highlight btn-primary"
+                        invisible="state not in ('new', 'enriched')"
+                        icon="fa-magic"/>
                     <button name="action_propose" type="object"
                         string="Propose" class="oe_highlight"
                         invisible="state not in ('new', 'enriched')"/>

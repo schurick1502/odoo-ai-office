@@ -1,7 +1,13 @@
 import json
+import logging
+import uuid
+
+import requests
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class AiCase(models.Model):
@@ -166,3 +172,66 @@ class AiCase(models.Model):
             before = {"state": record.state}
             record.state = "needs_attention"
             record._log_audit("needs_attention", before_vals=before, after_vals={"state": "needs_attention"})
+
+    def action_run_orchestrator(self):
+        """Call the AI Office Service to generate suggestions for this case."""
+        self.ensure_one()
+        if self.state not in ("new", "enriched"):
+            raise UserError(
+                _("AI orchestration can only be run on cases in 'New' or 'Enriched' state.")
+            )
+
+        service_url = self.env["ir.config_parameter"].sudo().get_param(
+            "ai_office.service_url", "http://ai_office_service:8100"
+        )
+        request_id = str(uuid.uuid4())
+
+        try:
+            response = requests.post(
+                f"{service_url}/v1/orchestrate",
+                json={
+                    "case_id": self.id,
+                    "request_id": request_id,
+                    "context": {
+                        "partner_id": self.partner_id.id or None,
+                        "partner_name": self.partner_id.name or "",
+                        "period": self.period or "",
+                        "company_id": self.company_id.id,
+                    },
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.ConnectionError:
+            raise UserError(_("Cannot connect to AI Office Service at %s") % service_url)
+        except requests.exceptions.Timeout:
+            raise UserError(_("AI Office Service timed out."))
+        except requests.exceptions.RequestException as e:
+            raise UserError(_("AI Office Service error: %s") % str(e))
+
+        # Write suggestions from response
+        for suggestion in data.get("suggestions", []):
+            self.env["account.ai.suggestion"].create({
+                "case_id": self.id,
+                "suggestion_type": suggestion.get("suggestion_type", "accounting_entry"),
+                "payload_json": json.dumps(suggestion.get("payload", {})),
+                "confidence": suggestion.get("confidence", 0.0),
+                "risk_score": suggestion.get("risk_score", 0.0),
+                "explanation_md": suggestion.get("explanation", ""),
+                "requires_human": suggestion.get("requires_human", True),
+                "agent_name": suggestion.get("agent_name", ""),
+                "request_id": request_id,
+            })
+
+        # Log audit entry
+        self._log_audit(
+            "orchestrate",
+            before_vals={"state": self.state, "suggestion_count": self.suggestion_count},
+            after_vals={"suggestions_added": len(data.get("suggestions", [])), "request_id": request_id},
+        )
+
+        # Transition state
+        before = {"state": self.state}
+        self.state = "proposed"
+        self._log_audit("propose", before_vals=before, after_vals={"state": "proposed"})
