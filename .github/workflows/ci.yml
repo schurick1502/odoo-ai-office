@@ -20,6 +20,8 @@ jobs:
         run: ruff check service/
       - name: Lint addon
         run: ruff check odoo/addons/account_ai_office/
+      - name: Lint MCP servers
+        run: ruff check mcp_servers/
 
   test-service:
     runs-on: ubuntu-latest
@@ -34,6 +36,21 @@ jobs:
         run: pip install ".[dev]"
       - name: Run tests
         working-directory: service
+        run: pytest -v --tb=short
+
+  test-mcp:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        working-directory: mcp_servers
+        run: pip install ".[dev]"
+      - name: Run tests
+        working-directory: mcp_servers
         run: pytest -v --tb=short
 
   build-service:
