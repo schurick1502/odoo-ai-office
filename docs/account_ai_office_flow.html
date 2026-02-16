@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Office – Steuerbüro Framework | Modul-Dokumentation</title>
+    <style>
+        :root {
+            --primary: #714B67;
+            --primary-light: #8F6B84;
+            --accent: #00A09D;
+            --accent-light: #E0F5F5;
+            --success: #28A745;
+            --warning: #FFC107;
+            --danger: #DC3545;
+            --info: #17A2B8;
+            --dark: #2C3E50;
+            --light: #F8F9FA;
+            --border: #DEE2E6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* ── Header ────────────────────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .hero .subtitle { font-size: 1.1rem; opacity: 0.9; max-width: 700px; margin: 0 auto; }
+        .hero .badge-row { margin-top: 1.2rem; display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+        .hero .badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* ── Navigation ────────────────────────────────────── */
+        nav {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            overflow-x: auto;
+        }
+        nav a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* ── Layout ────────────────────────────────────────── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+        section { margin-bottom: 3rem; }
+        section h2 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+        section h3 { font-size: 1.2rem; color: var(--dark); margin: 1.5rem 0 0.8rem; }
+        section h4 { font-size: 1rem; color: var(--primary-light); margin: 1rem 0 0.5rem; }
+
+        p { margin-bottom: 0.8rem; }
+
+        /* ── Cards ─────────────────────────────────────────── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+        }
+        .card.accent { border-left-color: var(--accent); }
+        .card.success { border-left-color: var(--success); }
+        .card.warning { border-left-color: var(--warning); }
+        .card.info { border-left-color: var(--info); }
+        .card.danger { border-left-color: var(--danger); }
+        .card h4 { margin-top: 0; color: var(--dark); font-size: 1.05rem; }
+        .card .tag {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Flow Diagram ──────────────────────────────────── */
+        .flow-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            overflow-x: auto;
+        }
+        .flow-svg { width: 100%; min-width: 900px; }
+
+        /* ── Tables ────────────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin: 1rem 0;
+        }
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 0.7rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f5f0f3; }
+
+        code {
+            background: #f0e8ee;
+            color: var(--primary);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: 'Fira Code', 'Consolas', monospace;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.2rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+        pre code { background: none; color: inherit; padding: 0; }
+
+        /* ── State badges ──────────────────────────────────── */
+        .state-badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        .state-new { background: var(--info); }
+        .state-enriched { background: #6F42C1; }
+        .state-proposed { background: var(--primary); }
+        .state-approved { background: #20C997; }
+        .state-posted { background: var(--success); }
+        .state-exported { background: #0D6EFD; }
+        .state-attention { background: var(--warning); color: var(--dark); }
+        .state-failed { background: var(--danger); }
+
+        /* ── Integration Diagram ───────────────────────────── */
+        .integration-grid {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr 80px 1fr;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .integration-box {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            box-shadow: var(--shadow);
+        }
+        .integration-box.service { border-color: var(--accent); }
+        .integration-box h4 { margin: 0 0 0.3rem; }
+        .integration-arrow {
+            font-size: 2rem;
+            color: var(--primary-light);
+        }
+
+        /* ── Role colors ───────────────────────────────────── */
+        .role-user { color: var(--info); font-weight: 600; }
+        .role-approver { color: var(--success); font-weight: 600; }
+        .role-admin { color: var(--danger); font-weight: 600; }
+        .role-agent { color: var(--accent); font-weight: 600; }
+
+        /* ── Responsive ────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .card-grid { grid-template-columns: 1fr; }
+            .integration-grid { grid-template-columns: 1fr; }
+            .integration-arrow { transform: rotate(90deg); }
+            nav ul { justify-content: flex-start; }
+        }
+
+        /* ── Misc ──────────────────────────────────────────── */
+        .highlight-box {
+            background: linear-gradient(135deg, #f8f4f7 0%, #e8f8f8 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .icon { font-size: 1.5rem; margin-right: 0.5rem; vertical-align: middle; }
+        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+        .flex-1 { flex: 1; min-width: 280px; }
+        .mt-1 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .text-muted { color: #6C757D; font-size: 0.9rem; }
+
+        footer {
+            background: var(--dark);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.85rem;
+        }
+        footer a { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="hero">
+    <h1>&#x1F916; AI Office – Steuerbüro Framework</h1>
+    <p class="subtitle">
+        KI-gestütztes Buchhaltungsmodul für Odoo 18 mit State-Machine, GoBD-Compliance,
+        DATEV-Export und automatischer Belegverarbeitung.
+    </p>
+    <div class="badge-row">
+        <span class="badge">Odoo 18 CE</span>
+        <span class="badge">account_ai_office</span>
+        <span class="badge">v18.0.1.0.0</span>
+        <span class="badge">LGPL-3</span>
+        <span class="badge">GoBD-konform</span>
+        <span class="badge">SKR03</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════ -->
+<nav>
+    <ul>
+        <li><a href="#overview">Überblick</a></li>
+        <li><a href="#flow">Workflow-Diagramm</a></li>
+        <li><a href="#models">Datenmodelle</a></li>
+        <li><a href="#functions">Funktionen</a></li>
+        <li><a href="#integration">Odoo-Integration</a></li>
+        <li><a href="#service">AI Service</a></li>
+        <li><a href="#export">DATEV & Export</a></li>
+        <li><a href="#security">Sicherheit</a></li>
+        <li><a href="#menu">Menüstruktur</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     1. ÜBERBLICK
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="overview">
+    <h2>1. Modulüberblick</h2>
+
+    <div class="highlight-box">
+        <p>
+            <strong>account_ai_office</strong> ist ein Odoo-18-Addon, das ein KI-gestütztes
+            Steuerbüro-Framework bereitstellt. Es automatisiert den kompletten Workflow von
+            der Belegerfassung (E-Mail-Eingang) über KI-gestützte Buchungsvorschläge bis hin
+            zum DATEV-Export – mit durchgängigem Audit-Trail und Human-in-the-Loop-Prinzip.
+        </p>
+    </div>
+
+    <div class="card-grid">
+        <div class="card">
+            <span class="tag">CORE</span>
+            <h4>&#x1F4CB; Case Management</h4>
+            <p>Jeder Beleg wird als „Case" erfasst mit 8-stufiger State-Machine. Automatische Referenznummern (AIC-YYYY-NNNNN), Partner-Zuordnung und Dokumentenverwaltung.</p>
+        </div>
+        <div class="card accent">
+            <span class="tag">AI</span>
+            <h4>&#x1F9E0; KI-Vorschläge</h4>
+            <p>Externe AI-Service-Integration: Dokument-Anreicherung (Enrich), Buchungsvorschläge (Orchestrate), OPOS-Matching. Jeder Vorschlag mit Confidence Score und Risikobewertung.</p>
+        </div>
+        <div class="card success">
+            <span class="tag">COMPLIANCE</span>
+            <h4>&#x2705; GoBD-konform</h4>
+            <p>Immutabler Audit-Trail, GoBD-Validierung vor Freigabe, Human-in-the-Loop für alle kritischen Aktionen, unveränderbare Protokolle.</p>
+        </div>
+        <div class="card info">
+            <span class="tag">EXPORT</span>
+            <h4>&#x1F4E4; DATEV-Integration</h4>
+            <p>DATEV-Kurzformat CSV-Export mit BU-Schlüssel, SKR03-Konten, UStVA-Bericht mit Kennziffern (KZ 81, 86, 66, 61, 83), Batch-Export.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     2. WORKFLOW FLOW DIAGRAM
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="flow">
+    <h2>2. Workflow-Diagramm</h2>
+
+    <div class="flow-container">
+        <svg class="flow-svg" viewBox="0 0 1100 680" xmlns="http://www.w3.org/2000/svg">
+            <!-- Definitions -->
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#714B67"/>
+                </marker>
+                <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#28A745"/>
+                </marker>
+                <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#FFC107"/>
+                </marker>
+                <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#DC3545"/>
+                </marker>
+                <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#0D6EFD"/>
+                </marker>
+                <filter id="shadow-filter">
+                    <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+                </filter>
+                <!-- Email Icon -->
+                <g id="email-icon">
+                    <rect x="0" y="2" width="20" height="14" rx="2" fill="none" stroke="white" stroke-width="1.5"/>
+                    <polyline points="0,3 10,10 20,3" fill="none" stroke="white" stroke-width="1.5"/>
+                </g>
+            </defs>
+
+            <!-- Background sections -->
+            <rect x="0" y="0" width="1100" height="80" rx="8" fill="#f8f4f7" opacity="0.5"/>
+            <text x="20" y="30" fill="#714B67" font-size="12" font-weight="600" opacity="0.6">EINGANG</text>
+
+            <rect x="0" y="90" width="1100" height="180" rx="8" fill="#e8f8f8" opacity="0.3"/>
+            <text x="20" y="120" fill="#00A09D" font-size="12" font-weight="600" opacity="0.6">KI-VERARBEITUNG</text>
+
+            <rect x="0" y="280" width="1100" height="160" rx="8" fill="#f0fff0" opacity="0.3"/>
+            <text x="20" y="310" fill="#28A745" font-size="12" font-weight="600" opacity="0.6">FREIGABE &amp; BUCHUNG</text>
+
+            <rect x="0" y="450" width="1100" height="120" rx="8" fill="#f0f0ff" opacity="0.3"/>
+            <text x="20" y="480" fill="#0D6EFD" font-size="12" font-weight="600" opacity="0.6">EXPORT &amp; ABGLEICH</text>
+
+            <!-- ── Email Intake (top) ── -->
+            <rect x="40" y="35" width="140" height="40" rx="20" fill="#6C757D" filter="url(#shadow-filter)"/>
+            <text x="110" y="60" text-anchor="middle" fill="white" font-size="13" font-weight="600">&#x2709; E-Mail Eingang</text>
+
+            <!-- Arrow: Email → New -->
+            <line x1="180" y1="55" x2="230" y2="55" stroke="#714B67" stroke-width="2" marker-end="url(#arrow)"/>
+            <line x1="290" y1="75" x2="290" y2="135" stroke="#714B67" stroke-width="2" marker-end="url(#arrow)"/>
+
+            <!-- ══ STATE NODES ══ -->
+
+            <!-- NEW -->
+            <rect x="240" y="35" width="100" height="40" rx="8" fill="#17A2B8" filter="url(#shadow-filter)"/>
+            <text x="290" y="60" text-anchor="middle" fill="white" font-size="13" font-weight="700">New</text>
+
+            <!-- ENRICHED -->
+            <rect x="160" y="145" width="120" height="44" rx="8" fill="#6F42C1" filter="url(#shadow-filter)"/>
+            <text x="220" y="163" text-anchor="middle" fill="white" font-size="11" font-weight="600">action_enrich()</text>
+            <text x="220" y="179" text-anchor="middle" fill="white" font-size="13" font-weight="700">Enriched</text>
+
+            <!-- PROPOSED -->
+            <rect x="380" y="145" width="160" height="44" rx="8" fill="#714B67" filter="url(#shadow-filter)"/>
+            <text x="460" y="163" text-anchor="middle" fill="white" font-size="11" font-weight="600">action_run_orchestrator()</text>
+            <text x="460" y="179" text-anchor="middle" fill="white" font-size="13" font-weight="700">Proposed</text>
+
+            <!-- Arrow: New → Enriched -->
+            <path d="M260 75 L220 145" stroke="#714B67" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <text x="215" y="110" fill="#714B67" font-size="10" font-weight="500" transform="rotate(-30,215,110)">Enrich</text>
+
+            <!-- Arrow: New → Proposed (direct Run AI) -->
+            <path d="M320 75 L440 145" stroke="#714B67" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <text x="400" y="105" fill="#714B67" font-size="10" font-weight="500" transform="rotate(20,400,105)">Run AI</text>
+
+            <!-- Arrow: Enriched → Proposed -->
+            <line x1="280" y1="167" x2="380" y2="167" stroke="#714B67" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="330" y="160" fill="#714B67" font-size="10" font-weight="500">Run AI</text>
+
+            <!-- Suggestion Box -->
+            <rect x="620" y="130" width="160" height="60" rx="8" fill="white" stroke="#714B67" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="700" y="153" text-anchor="middle" fill="#714B67" font-size="11" font-weight="600">account.ai.suggestion</text>
+            <text x="700" y="170" text-anchor="middle" fill="#6C757D" font-size="10">Confidence: 0.0 – 1.0</text>
+            <text x="700" y="183" text-anchor="middle" fill="#6C757D" font-size="10">Risk Score: 0.0 – 1.0</text>
+
+            <!-- Arrow: Proposed → Suggestion Box -->
+            <line x1="540" y1="167" x2="620" y2="167" stroke="#714B67" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+            <!-- AI Service Box -->
+            <rect x="840" y="115" width="220" height="90" rx="12" fill="white" stroke="#00A09D" stroke-width="2" filter="url(#shadow-filter)"/>
+            <text x="950" y="140" text-anchor="middle" fill="#00A09D" font-size="12" font-weight="700">AI Office Service</text>
+            <text x="950" y="158" text-anchor="middle" fill="#6C757D" font-size="10">FastAPI (Port 8100)</text>
+            <text x="950" y="174" text-anchor="middle" fill="#6C757D" font-size="10">/v1/enrich  /v1/orchestrate</text>
+            <text x="950" y="190" text-anchor="middle" fill="#6C757D" font-size="10">/v1/opos/match</text>
+
+            <!-- Arrow: Service ← Suggestion -->
+            <line x1="780" y1="155" x2="840" y2="155" stroke="#00A09D" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+            <!-- GoBD Validation Box -->
+            <rect x="350" y="230" width="180" height="40" rx="6" fill="#FFF3CD" stroke="#FFC107" stroke-width="1.5"/>
+            <text x="440" y="254" text-anchor="middle" fill="#856404" font-size="12" font-weight="600">&#x1F50D; GoBD-Validierung</text>
+
+            <!-- Arrow: Proposed → GoBD -->
+            <line x1="460" y1="189" x2="440" y2="230" stroke="#FFC107" stroke-width="2" marker-end="url(#arrow-orange)"/>
+
+            <!-- APPROVED -->
+            <rect x="390" y="310" width="120" height="44" rx="8" fill="#20C997" filter="url(#shadow-filter)"/>
+            <text x="450" y="328" text-anchor="middle" fill="white" font-size="11" font-weight="600">action_approve()</text>
+            <text x="450" y="344" text-anchor="middle" fill="white" font-size="13" font-weight="700">Approved</text>
+
+            <!-- Arrow: GoBD → Approved -->
+            <line x1="440" y1="270" x2="450" y2="310" stroke="#28A745" stroke-width="2" marker-end="url(#arrow-green)"/>
+            <text x="465" y="294" fill="#28A745" font-size="10" font-weight="500">&#x2713; Passed</text>
+
+            <!-- account.move Box -->
+            <rect x="620" y="305" width="160" height="55" rx="8" fill="white" stroke="#28A745" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="700" y="325" text-anchor="middle" fill="#28A745" font-size="11" font-weight="600">account.move</text>
+            <text x="700" y="342" text-anchor="middle" fill="#6C757D" font-size="10">Journal Entry erstellt</text>
+            <text x="700" y="355" text-anchor="middle" fill="#6C757D" font-size="10">SKR03 Konten</text>
+
+            <!-- POSTED -->
+            <rect x="390" y="390" width="120" height="44" rx="8" fill="#28A745" filter="url(#shadow-filter)"/>
+            <text x="450" y="408" text-anchor="middle" fill="white" font-size="11" font-weight="600">action_post()</text>
+            <text x="450" y="424" text-anchor="middle" fill="white" font-size="13" font-weight="700">Posted</text>
+
+            <!-- Arrow: Approved → Posted -->
+            <line x1="450" y1="354" x2="450" y2="390" stroke="#28A745" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+            <!-- Arrow: Posted → account.move -->
+            <line x1="510" y1="407" x2="620" y2="340" stroke="#28A745" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+
+            <!-- EXPORTED -->
+            <rect x="200" y="490" width="130" height="44" rx="8" fill="#0D6EFD" filter="url(#shadow-filter)"/>
+            <text x="265" y="508" text-anchor="middle" fill="white" font-size="11" font-weight="600">action_export()</text>
+            <text x="265" y="524" text-anchor="middle" fill="white" font-size="13" font-weight="700">Exported</text>
+
+            <!-- Arrow: Posted → Exported -->
+            <path d="M410 434 L280 490" stroke="#0D6EFD" stroke-width="2" fill="none" marker-end="url(#arrow-blue)"/>
+            <text x="320" y="458" fill="#0D6EFD" font-size="10" font-weight="500">DATEV CSV</text>
+
+            <!-- DATEV File Box -->
+            <rect x="50" y="485" width="120" height="50" rx="8" fill="white" stroke="#0D6EFD" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="110" y="505" text-anchor="middle" fill="#0D6EFD" font-size="11" font-weight="600">&#x1F4C4; DATEV CSV</text>
+            <text x="110" y="522" text-anchor="middle" fill="#6C757D" font-size="9">ir.attachment</text>
+            <text x="110" y="532" text-anchor="middle" fill="#6C757D" font-size="9">BU-Schlüssel, SKR03</text>
+
+            <!-- Arrow: Exported → DATEV File -->
+            <line x1="200" y1="512" x2="170" y2="512" stroke="#0D6EFD" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-blue)"/>
+
+            <!-- OPOS Box -->
+            <rect x="530" y="480" width="170" height="55" rx="8" fill="white" stroke="#00A09D" stroke-width="2" filter="url(#shadow-filter)"/>
+            <text x="615" y="502" text-anchor="middle" fill="#00A09D" font-size="12" font-weight="600">&#x1F504; OPOS Matching</text>
+            <text x="615" y="518" text-anchor="middle" fill="#6C757D" font-size="10">action_run_opos()</text>
+            <text x="615" y="530" text-anchor="middle" fill="#6C757D" font-size="9">Offene Posten abgleichen</text>
+
+            <!-- Arrow: Posted → OPOS -->
+            <path d="M490 434 L580 480" stroke="#00A09D" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+            <!-- Reconciliation Box -->
+            <rect x="760" y="480" width="200" height="55" rx="8" fill="white" stroke="#28A745" stroke-width="2" filter="url(#shadow-filter)"/>
+            <text x="860" y="502" text-anchor="middle" fill="#28A745" font-size="12" font-weight="600">&#x2705; Reconciliation</text>
+            <text x="860" y="518" text-anchor="middle" fill="#6C757D" font-size="10">action_apply_reconciliation()</text>
+            <text x="860" y="530" text-anchor="middle" fill="#6C757D" font-size="9">Odoo reconcile() API</text>
+
+            <!-- Arrow: OPOS → Reconciliation -->
+            <line x1="700" y1="507" x2="760" y2="507" stroke="#28A745" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+            <!-- ── Error States ── -->
+
+            <!-- NEEDS ATTENTION -->
+            <rect x="820" y="310" width="150" height="40" rx="8" fill="#FFC107" filter="url(#shadow-filter)"/>
+            <text x="895" y="335" text-anchor="middle" fill="#2C3E50" font-size="12" font-weight="700">&#x26A0; Needs Attention</text>
+
+            <!-- Arrow: any → Needs Attention -->
+            <path d="M510 340 L820 335" stroke="#FFC107" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
+            <text x="665" y="328" fill="#856404" font-size="9" font-style="italic">von jedem Status</text>
+
+            <!-- FAILED -->
+            <rect x="820" y="370" width="150" height="40" rx="8" fill="#DC3545" filter="url(#shadow-filter)"/>
+            <text x="895" y="395" text-anchor="middle" fill="white" font-size="12" font-weight="700">&#x274C; Failed</text>
+
+            <!-- Arrow: Needs Attention/Failed → New (reset) -->
+            <path d="M895 410 Q895 440 500 440 Q200 440 200 100 Q200 55 240 55"
+                  stroke="#DC3545" stroke-width="1.5" stroke-dasharray="4,3" fill="none" marker-end="url(#arrow-red)"/>
+            <text x="130" y="250" fill="#DC3545" font-size="9" font-weight="500" transform="rotate(-90,130,250)">action_reset_to_new()</text>
+
+            <!-- ── Audit Trail ── -->
+            <rect x="40" y="600" width="1020" height="60" rx="10" fill="white" stroke="#714B67" stroke-width="1.5" filter="url(#shadow-filter)"/>
+            <text x="550" y="625" text-anchor="middle" fill="#714B67" font-size="13" font-weight="700">
+                &#x1F4DD; Audit Trail (account.ai.audit_log) – Jede Aktion wird unveränderbar protokolliert
+            </text>
+            <text x="550" y="645" text-anchor="middle" fill="#6C757D" font-size="11">
+                email_intake &#x2192; enrich &#x2192; orchestrate &#x2192; approve &#x2192; post &#x2192; export &#x2192; opos_match &#x2192; reconciliation_applied
+            </text>
+
+            <!-- Vertical dashed lines connecting to audit -->
+            <line x1="290" y1="75" x2="290" y2="600" stroke="#714B67" stroke-width="0.5" stroke-dasharray="3,5" opacity="0.2"/>
+            <line x1="450" y1="434" x2="450" y2="600" stroke="#714B67" stroke-width="0.5" stroke-dasharray="3,5" opacity="0.2"/>
+            <line x1="265" y1="534" x2="265" y2="600" stroke="#714B67" stroke-width="0.5" stroke-dasharray="3,5" opacity="0.2"/>
+
+            <!-- Legend -->
+            <rect x="40" y="570" width="15" height="3" fill="#714B67"/>
+            <text x="60" y="574" fill="#6C757D" font-size="9">Zustandsübergang</text>
+            <rect x="200" y="570" width="15" height="3" fill="#714B67" stroke-dasharray="4,3"/>
+            <text x="220" y="574" fill="#6C757D" font-size="9">Datenfluss</text>
+            <rect x="360" y="568" width="10" height="7" rx="2" fill="#17A2B8"/>
+            <text x="375" y="574" fill="#6C757D" font-size="9">User-Aktion</text>
+            <rect x="470" y="568" width="10" height="7" rx="2" fill="#00A09D"/>
+            <text x="485" y="574" fill="#6C757D" font-size="9">AI-Service</text>
+            <rect x="580" y="568" width="10" height="7" rx="2" fill="#28A745"/>
+            <text x="595" y="574" fill="#6C757D" font-size="9">Approver-Aktion</text>
+        </svg>
+    </div>
+
+    <h3>Status-Übersicht</h3>
+    <p>
+        <span class="state-badge state-new">New</span>
+        <span class="state-badge state-enriched">Enriched</span>
+        <span class="state-badge state-proposed">Proposed</span>
+        <span class="state-badge state-approved">Approved</span>
+        <span class="state-badge state-posted">Posted</span>
+        <span class="state-badge state-exported">Exported</span>
+        <span class="state-badge state-attention">Needs Attention</span>
+        <span class="state-badge state-failed">Failed</span>
+    </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     3. DATENMODELLE
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="models">
+    <h2>3. Datenmodelle</h2>
+
+    <div class="card-grid">
+        <div class="card">
+            <span class="tag">CORE MODEL</span>
+            <h4>account.ai.case</h4>
+            <p><strong>Hauptmodell.</strong> Erbt von <code>mail.thread</code> und <code>mail.activity.mixin</code>. Repräsentiert einen einzelnen Buchungsvorgang mit State-Machine, Dokumenten, Vorschlägen und Audit-Trail.</p>
+            <table>
+                <tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr>
+                <tr><td><code>name</code></td><td>Char</td><td>Referenz (AIC-YYYY-NNNNN)</td></tr>
+                <tr><td><code>state</code></td><td>Selection</td><td>8 Status mit Tracking</td></tr>
+                <tr><td><code>partner_id</code></td><td>Many2one</td><td>Zugeordneter Partner</td></tr>
+                <tr><td><code>document_ids</code></td><td>Many2many</td><td>Belege (ir.attachment)</td></tr>
+                <tr><td><code>suggestion_ids</code></td><td>One2many</td><td>KI-Vorschläge</td></tr>
+                <tr><td><code>audit_log_ids</code></td><td>One2many</td><td>Audit-Einträge</td></tr>
+                <tr><td><code>move_id</code></td><td>Many2one</td><td>Journalbuchung</td></tr>
+                <tr><td><code>period</code></td><td>Char</td><td>Buchhaltungsperiode</td></tr>
+                <tr><td><code>datev_file_id</code></td><td>Many2one</td><td>DATEV-Exportdatei</td></tr>
+            </table>
+        </div>
+
+        <div class="card accent">
+            <span class="tag">AI OUTPUT</span>
+            <h4>account.ai.suggestion</h4>
+            <p>KI-Vorschläge verschiedener Typen. Jeder Vorschlag hat ein JSON-Payload, Confidence-Score und Risikobewertung.</p>
+            <table>
+                <tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr>
+                <tr><td><code>suggestion_type</code></td><td>Selection</td><td>accounting_entry, enrichment, classification, validation, reconciliation</td></tr>
+                <tr><td><code>payload_json</code></td><td>Text</td><td>JSON mit Buchungsdaten</td></tr>
+                <tr><td><code>confidence</code></td><td>Float</td><td>Sicherheit (0.0–1.0)</td></tr>
+                <tr><td><code>risk_score</code></td><td>Float</td><td>Risiko (0.0–1.0)</td></tr>
+                <tr><td><code>agent_name</code></td><td>Char</td><td>Name des KI-Agenten</td></tr>
+                <tr><td><code>request_id</code></td><td>Char</td><td>UUID der Anfrage</td></tr>
+            </table>
+        </div>
+
+        <div class="card success">
+            <span class="tag">COMPLIANCE</span>
+            <h4>account.ai.audit_log</h4>
+            <p>Unveränderbare Protokolleinträge. Löschung ist nur für Superuser möglich (GoBD-Anforderung). Erfasst Before/After-JSON-Diffs.</p>
+            <table>
+                <tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr>
+                <tr><td><code>actor_type</code></td><td>Selection</td><td>user oder agent</td></tr>
+                <tr><td><code>actor</code></td><td>Char</td><td>Username/Agent-ID</td></tr>
+                <tr><td><code>action</code></td><td>Char</td><td>Aktion (z.B. approve)</td></tr>
+                <tr><td><code>before_json</code></td><td>Text</td><td>Zustand vorher</td></tr>
+                <tr><td><code>after_json</code></td><td>Text</td><td>Zustand nachher</td></tr>
+            </table>
+        </div>
+
+        <div class="card warning">
+            <span class="tag">CONFIG</span>
+            <h4>account.ai.policy</h4>
+            <p>Konfigurierbare Regelwerke für das KI-Verhalten. Scopes: Company, Supplier, Category. JSON-basierte Regeldefinition.</p>
+            <table>
+                <tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr>
+                <tr><td><code>scope</code></td><td>Selection</td><td>company, supplier, category</td></tr>
+                <tr><td><code>key</code></td><td>Char</td><td>Eindeutiger Schlüssel</td></tr>
+                <tr><td><code>rules_json</code></td><td>Text</td><td>JSON-Regeln</td></tr>
+                <tr><td><code>is_active</code></td><td>Boolean</td><td>Aktiv/Inaktiv</td></tr>
+                <tr><td><code>version</code></td><td>Integer</td><td>Regelversion</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <h3 class="mt-1">Wizard (TransientModel)</h3>
+    <div class="card-grid">
+        <div class="card info">
+            <h4>account.ai.datev.export</h4>
+            <p>Batch-DATEV-Export nach Periode. Unterstützt DATEV CSV und Standard CSV. Exportiert und aktualisiert den Case-Status automatisch.</p>
+        </div>
+        <div class="card info">
+            <h4>account.ai.tax.report</h4>
+            <p>UStVA-Bericht (Umsatzsteuervoranmeldung) mit Kennziffern KZ 81/86/66/61/83. CSV und JSON-Export. ZM als Platzhalter.</p>
+        </div>
+        <div class="card info">
+            <h4>account.ai.audit_log.export</h4>
+            <p>Export der Audit-Logs nach Datumsbereich. CSV und JSON-Format für externe Prüfungen und Archivierung.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     4. FUNKTIONEN IM DETAIL
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="functions">
+    <h2>4. Funktionen im Detail</h2>
+
+    <!-- ── Email Intake ── -->
+    <h3>&#x2709;&#xFE0F; E-Mail-Eingang (<code>message_new</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Trigger:</strong> Eingehende E-Mail an den Alias <code>ai-office@...</code></p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Odoo's Fetchmail-System empfängt die E-Mail und ruft <code>message_new()</code> auf</li>
+            <li>Partner-Zuordnung: E-Mail-Adresse wird gegen <code>res.partner</code> gematcht, oder ein neuer Lieferant wird erstellt (<code>supplier_rank=1</code>)</li>
+            <li>Anhänge werden nach MIME-Type gefiltert (PDF, XML, PNG, JPEG, TIFF, BMP)</li>
+            <li>Case wird im Status <span class="state-badge state-new">New</span> erstellt</li>
+            <li>Audit-Log-Eintrag: <code>email_intake</code> (actor_type: <span class="role-agent">agent</span>)</li>
+        </ol>
+        <p><strong>Erlaubte MIME-Types:</strong> <code>application/pdf</code>, <code>application/xml</code>, <code>text/xml</code>, <code>image/png</code>, <code>image/jpeg</code>, <code>image/tiff</code>, <code>image/bmp</code></p>
+    </div>
+
+    <!-- ── Enrich ── -->
+    <h3>&#x1F50D; Dokument-Anreicherung (<code>action_enrich</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-new">New</span></p>
+        <p><strong>Zielstatus:</strong> <span class="state-badge state-enriched">Enriched</span></p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Sendet Dokument-Metadaten (Filename, MIME-Type, Größe) an <code>POST /v1/enrich</code></li>
+            <li>AI Service extrahiert Felder: <code>invoice_number</code>, <code>invoice_date</code>, <code>amount_total</code>, <code>tax_rate</code>, etc.</li>
+            <li>Erstellt <code>enrichment</code>-Typ Suggestions mit Key-Value-Paaren</li>
+            <li>Status-Übergang: <span class="state-badge state-new">New</span> → <span class="state-badge state-enriched">Enriched</span></li>
+        </ol>
+    </div>
+
+    <!-- ── Orchestrate ── -->
+    <h3>&#x1F9E0; KI-Orchestrierung (<code>action_run_orchestrator</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-new">New</span> oder <span class="state-badge state-enriched">Enriched</span></p>
+        <p><strong>Zielstatus:</strong> <span class="state-badge state-proposed">Proposed</span></p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Sammelt Enrichment-Kontext aus bestehenden Suggestions</li>
+            <li>Lädt aktive Policies (Company/Supplier/Category)</li>
+            <li>Sendet Kontext an <code>POST /v1/orchestrate</code> inkl. Partner, Periode, Policies</li>
+            <li>AI Service generiert <code>accounting_entry</code>-Suggestions mit Buchungszeilen (Konto, Soll, Haben, Beschreibung)</li>
+            <li>Erstellt Suggestions mit Confidence/Risk-Scores</li>
+            <li>Status-Übergang → <span class="state-badge state-proposed">Proposed</span></li>
+        </ol>
+        <p><strong>Suggestion-Payload (accounting_entry):</strong></p>
+<pre><code>{
+    "lines": [
+        {"account": "6300", "debit": 100.00, "credit": 0.00, "description": "Büromaterial"},
+        {"account": "1576", "debit": 19.00,  "credit": 0.00, "description": "Vorsteuer 19%"},
+        {"account": "1600", "debit": 0.00,   "credit": 119.00, "description": "Verbindlichkeiten"}
+    ],
+    "tax_rate": 0.19
+}</code></pre>
+    </div>
+
+    <!-- ── GoBD ── -->
+    <h3>&#x1F50D; GoBD-Validierung (<code>_validate_gobd</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Wird aufgerufen bei:</strong> <code>action_approve()</code></p>
+        <p><strong>Prüfungen:</strong></p>
+        <table>
+            <tr><th>Prüfung</th><th>Beschreibung</th></tr>
+            <tr><td>Suggestion vorhanden</td><td>Mindestens eine <code>accounting_entry</code>-Suggestion muss existieren</td></tr>
+            <tr><td>Buchungszeilen</td><td>Jede Zeile braucht Konto, Betrag &gt; 0, Beschreibung (Buchungstext)</td></tr>
+            <tr><td>Saldo-Prüfung</td><td>Soll = Haben (Toleranz 0.01 EUR)</td></tr>
+            <tr><td>Datum-Prüfung</td><td>Rechnungsdatum darf nicht in der Zukunft liegen</td></tr>
+            <tr><td>Partner bei 1600</td><td>Verbindlichkeiten-Konto erfordert Partner-Zuordnung</td></tr>
+            <tr><td>Confidence-Schwelle</td><td>Aus Policy: Default ≥ 0.80</td></tr>
+            <tr><td>Risiko-Maximum</td><td>Aus Policy: Default ≤ 0.30</td></tr>
+        </table>
+    </div>
+
+    <!-- ── Approve ── -->
+    <h3>&#x2705; Freigabe (<code>action_approve</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-proposed">Proposed</span></p>
+        <p><strong>Zielstatus:</strong> <span class="state-badge state-approved">Approved</span></p>
+        <p><strong>Berechtigung:</strong> <span class="role-approver">ai_office_approver</span> erforderlich</p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Gruppenprüfung: User muss <code>ai_office_approver</code> sein</li>
+            <li>Führt <code>_validate_gobd()</code> aus – bei Fehler: <code>UserError</code> mit Detail-Liste</li>
+            <li>Status-Übergang → <span class="state-badge state-approved">Approved</span></li>
+            <li>Audit-Log: <code>approve</code> (actor_type: <span class="role-user">user</span>)</li>
+        </ol>
+    </div>
+
+    <!-- ── Post ── -->
+    <h3>&#x1F4D2; Buchen (<code>action_post</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-approved">Approved</span></p>
+        <p><strong>Zielstatus:</strong> <span class="state-badge state-posted">Posted</span></p>
+        <p><strong>Berechtigung:</strong> <span class="role-approver">ai_office_approver</span> erforderlich</p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Liest <code>accounting_entry</code>-Suggestion Payload</li>
+            <li>Bestimmt Journal: Einkaufsjournal der Company (Fallback: erstes Journal)</li>
+            <li>Bestimmt Datum: aus Enrichment-Kontext (<code>invoice_date</code>) oder heute</li>
+            <li>Erstellt <code>account.move</code> mit <code>move_type="entry"</code></li>
+            <li>Konten-Auflösung: SKR03-Codes → <code>account.account</code> Datensätze</li>
+            <li>Verknüpft <code>move_id</code> mit dem Case</li>
+        </ol>
+        <p><strong>Konten-Mapping (SKR03):</strong></p>
+        <table>
+            <tr><th>Konto</th><th>Bezeichnung</th><th>Typ</th></tr>
+            <tr><td><code>6300</code></td><td>Büromaterial / Aufwand</td><td>Soll</td></tr>
+            <tr><td><code>1576</code></td><td>Vorsteuer 19%</td><td>Soll</td></tr>
+            <tr><td><code>1571</code></td><td>Vorsteuer 7%</td><td>Soll</td></tr>
+            <tr><td><code>1600</code></td><td>Verbindlichkeiten a.L.L.</td><td>Haben</td></tr>
+            <tr><td><code>1200</code></td><td>Bank</td><td>Contra</td></tr>
+            <tr><td><code>1400</code></td><td>Ford. a.L.L.</td><td>Contra</td></tr>
+        </table>
+    </div>
+
+    <!-- ── Export ── -->
+    <h3>&#x1F4E4; DATEV-Export (<code>action_export</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-posted">Posted</span></p>
+        <p><strong>Zielstatus:</strong> <span class="state-badge state-exported">Exported</span></p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Prüft, dass <code>move_id</code> existiert</li>
+            <li>Generiert DATEV-CSV im Kurzformat (eine Zeile pro Aufwandskonto)</li>
+            <li>Erstellt <code>ir.attachment</code> mit Base64-encodiertem CSV</li>
+            <li>Verknüpft <code>datev_file_id</code> mit dem Case</li>
+        </ol>
+        <p><strong>DATEV-Format:</strong> Semikolon-getrennt, deutsches Dezimalkomma (z.B. <code>119,00</code>), BU-Schlüssel, DDMM-Datum</p>
+    </div>
+
+    <!-- ── OPOS ── -->
+    <h3>&#x1F504; OPOS-Abgleich (<code>action_run_opos</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-posted">Posted</span></p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Liest offene Posten des Partners: nicht ausgeglichene <code>account.move.line</code> auf Kreditoren/Debitoren-Konten</li>
+            <li>Sendet offene Posten an <code>POST /v1/opos/match</code></li>
+            <li>AI Service analysiert und schlägt Zuordnungen vor (Debit-Line ↔ Credit-Line)</li>
+            <li>Erstellt <code>reconciliation</code>-Typ Suggestions</li>
+        </ol>
+    </div>
+
+    <!-- ── Reconciliation ── -->
+    <h3>&#x2705; Ausgleich anwenden (<code>action_apply_reconciliation</code>)</h3>
+    <div class="highlight-box">
+        <p><strong>Erlaubt von Status:</strong> <span class="state-badge state-posted">Posted</span></p>
+        <p><strong>Berechtigung:</strong> <span class="role-approver">ai_office_approver</span> erforderlich</p>
+        <p><strong>Ablauf:</strong></p>
+        <ol>
+            <li>Liest alle <code>reconciliation</code>-Suggestions des Cases</li>
+            <li>Für jedes Match-Paar: Lädt <code>account.move.line</code> Datensätze</li>
+            <li>Prüft ob bereits reconciled → überspringt</li>
+            <li>Ruft Odoos <code>lines.reconcile()</code> auf</li>
+            <li>Sammelt Fehler und zeigt sie am Ende an</li>
+        </ol>
+    </div>
+
+    <!-- ── Error States ── -->
+    <h3>&#x26A0;&#xFE0F; Fehler-Handling</h3>
+    <div class="card-grid">
+        <div class="card warning">
+            <h4>action_needs_attention()</h4>
+            <p>Kann von <strong>jedem Status</strong> aufgerufen werden. Setzt den Case auf <span class="state-badge state-attention">Needs Attention</span> für manuelle Prüfung.</p>
+        </div>
+        <div class="card danger">
+            <h4>action_reset_to_new()</h4>
+            <p>Nur von <span class="state-badge state-attention">Needs Attention</span> oder <span class="state-badge state-failed">Failed</span>. Setzt zurück auf <span class="state-badge state-new">New</span>.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     5. ODOO-INTEGRATION
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="integration">
+    <h2>5. Odoo-Integration</h2>
+
+    <h3>Architektur-Überblick</h3>
+    <div class="integration-grid">
+        <div class="integration-box">
+            <h4>&#x2709;&#xFE0F; Fetchmail</h4>
+            <p class="text-muted">E-Mail Intake<br><code>mail.alias → ai-office</code></p>
+        </div>
+        <div class="integration-arrow">→</div>
+        <div class="integration-box">
+            <h4>&#x1F4CB; AI Case</h4>
+            <p class="text-muted">State Machine<br><code>account.ai.case</code></p>
+        </div>
+        <div class="integration-arrow">⇄</div>
+        <div class="integration-box service">
+            <h4>&#x1F916; AI Service</h4>
+            <p class="text-muted">FastAPI (Docker)<br><code>:8100/v1/*</code></p>
+        </div>
+    </div>
+
+    <h3>Integrationspunkte mit Odoo-Kernmodulen</h3>
+    <table>
+        <tr><th>Odoo-Modul</th><th>Integration</th><th>Beschreibung</th></tr>
+        <tr>
+            <td><code>mail</code></td>
+            <td>mail.thread, mail.activity.mixin, mail.alias</td>
+            <td>Chatter auf Cases, E-Mail-Alias <code>ai-office</code> für automatische Case-Erstellung, <code>message_new()</code></td>
+        </tr>
+        <tr>
+            <td><code>fetchmail</code></td>
+            <td>depends</td>
+            <td>Empfängt eingehende E-Mails und routet sie zum Mail-Alias</td>
+        </tr>
+        <tr>
+            <td><code>account</code></td>
+            <td>account.move, account.move.line, account.account, account.journal</td>
+            <td>Erstellt Journal Entries aus Suggestions, SKR03-Konten-Auflösung, Reconciliation</td>
+        </tr>
+        <tr>
+            <td><code>base</code></td>
+            <td>res.partner, res.company, ir.attachment, ir.sequence, ir.config_parameter</td>
+            <td>Partner-Matching/Erstellung, Dokumentenspeicherung, Case-Nummerierung, Service-URL-Konfiguration</td>
+        </tr>
+    </table>
+
+    <h3>Konfigurationsparameter</h3>
+    <table>
+        <tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr>
+        <tr>
+            <td><code>ai_office.service_url</code></td>
+            <td><code>http://ai_office_service:8100</code></td>
+            <td>URL des AI Service (Docker-internes DNS)</td>
+        </tr>
+    </table>
+
+    <h3>Sequenz</h3>
+    <p>
+        <code>ir.sequence</code> mit Code <code>account.ai.case</code>, Prefix <code>AIC-%(year)s-</code>,
+        Padding 5. Erzeugt z.B. <code>AIC-2024-00001</code>.
+    </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     6. AI SERVICE KOMMUNIKATION
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="service">
+    <h2>6. AI Service – Kommunikation</h2>
+
+    <p>Das Odoo-Addon kommuniziert mit dem externen AI Service über HTTP/JSON (requests-Library, Timeout: 30s).</p>
+
+    <h3>Endpunkte</h3>
+    <table>
+        <tr><th>Endpunkt</th><th>Methode</th><th>Odoo-Funktion</th><th>Beschreibung</th></tr>
+        <tr>
+            <td><code>/v1/enrich</code></td>
+            <td>POST</td>
+            <td><code>action_enrich()</code></td>
+            <td>Dokument-Metadaten senden → Enrichment-Suggestions zurück</td>
+        </tr>
+        <tr>
+            <td><code>/v1/orchestrate</code></td>
+            <td>POST</td>
+            <td><code>action_run_orchestrator()</code></td>
+            <td>Enrichment-Kontext + Policies → Buchungsvorschläge zurück</td>
+        </tr>
+        <tr>
+            <td><code>/v1/opos/match</code></td>
+            <td>POST</td>
+            <td><code>action_run_opos()</code></td>
+            <td>Offene Posten senden → Reconciliation-Matches zurück</td>
+        </tr>
+    </table>
+
+    <h3>Request-Struktur (Beispiel: orchestrate)</h3>
+<pre><code>{
+    "case_id": 42,
+    "request_id": "uuid-...",
+    "context": {
+        "invoice_number": "RE-2024-00123",
+        "invoice_date": "2024-01-15",
+        "amount_total": "119.00",
+        "tax_rate": "0.19",
+        "partner_id": 7,
+        "partner_name": "Lieferant GmbH",
+        "period": "2024-01",
+        "company_id": 1,
+        "policies": [
+            {"scope": "company", "key": "default", "rules": {"confidence_threshold": 0.8}}
+        ]
+    }
+}</code></pre>
+
+    <h3>Response-Struktur</h3>
+<pre><code>{
+    "suggestions": [
+        {
+            "suggestion_type": "accounting_entry",
+            "payload": {
+                "lines": [...],
+                "tax_rate": 0.19
+            },
+            "confidence": 0.92,
+            "risk_score": 0.08,
+            "explanation": "Büromaterial mit 19% USt",
+            "requires_human": true,
+            "agent_name": "booking_agent"
+        }
+    ]
+}</code></pre>
+
+    <h3>Fehlerbehandlung</h3>
+    <table>
+        <tr><th>Exception</th><th>UserError-Nachricht</th></tr>
+        <tr><td><code>ConnectionError</code></td><td>„Cannot connect to AI Office Service at {url}"</td></tr>
+        <tr><td><code>Timeout</code></td><td>„AI Office Service timed out."</td></tr>
+        <tr><td><code>RequestException</code></td><td>„AI Office Service error: {details}"</td></tr>
+    </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     7. DATEV & EXPORT
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="export">
+    <h2>7. DATEV-Export & Berichte</h2>
+
+    <h3>DATEV Kurzformat</h3>
+    <div class="highlight-box">
+        <p>Der Export generiert DATEV-konforme CSV-Dateien im <strong>Kurzformat</strong>:</p>
+        <ul>
+            <li><strong>Trennzeichen:</strong> Semikolon (<code>;</code>)</li>
+            <li><strong>Dezimalformat:</strong> Deutsches Komma (<code>119,00</code>)</li>
+            <li><strong>Datumsformat:</strong> DDMM (z.B. <code>1501</code> für 15. Januar)</li>
+            <li><strong>Bruttobetrag:</strong> Eine Zeile pro Aufwandskonto, Steuer anteilig verteilt</li>
+            <li><strong>BU-Schlüssel:</strong> <code>9</code> = 19% USt, <code>5</code> = 7% USt, <code>0</code> = steuerfrei</li>
+            <li><strong>Gegenkonto:</strong> Standard <code>1600</code> (Verbindlichkeiten)</li>
+        </ul>
+    </div>
+
+    <h4>DATEV-Spalten</h4>
+    <table>
+        <tr><th>Nr.</th><th>Spalte</th><th>Beispiel</th></tr>
+        <tr><td>1</td><td>Umsatz (Soll/Haben)</td><td><code>119,00</code></td></tr>
+        <tr><td>2</td><td>Soll/Haben-Kennzeichen</td><td><code>S</code> oder <code>H</code></td></tr>
+        <tr><td>3</td><td>WKZ Umsatz</td><td><code>EUR</code></td></tr>
+        <tr><td>7</td><td>Konto</td><td><code>6300</code></td></tr>
+        <tr><td>8</td><td>Gegenkonto</td><td><code>1600</code></td></tr>
+        <tr><td>9</td><td>BU-Schlüssel</td><td><code>9</code></td></tr>
+        <tr><td>10</td><td>Belegdatum</td><td><code>1501</code></td></tr>
+        <tr><td>11</td><td>Belegfeld 1</td><td><code>RE-2024-00123</code></td></tr>
+        <tr><td>14</td><td>Buchungstext</td><td><code>Büromaterial</code></td></tr>
+    </table>
+
+    <h3>UStVA-Bericht (Umsatzsteuervoranmeldung)</h3>
+    <table>
+        <tr><th>Kennziffer</th><th>Bezeichnung</th><th>Berechnung</th></tr>
+        <tr><td><strong>KZ 81</strong></td><td>Steuerpflichtige Umsätze 19%</td><td>Summe Netto-Aufwandskonten bei 19%</td></tr>
+        <tr><td><strong>KZ 86</strong></td><td>Steuerpflichtige Umsätze 7%</td><td>Summe Netto-Aufwandskonten bei 7%</td></tr>
+        <tr><td><strong>KZ 66</strong></td><td>Vorsteuer 19%</td><td>Summe Konto 1576</td></tr>
+        <tr><td><strong>KZ 61</strong></td><td>Vorsteuer 7%</td><td>Summe Konto 1571</td></tr>
+        <tr><td><strong>KZ 83</strong></td><td>Vorauszahlung</td><td>(KZ81×0.19 + KZ86×0.07) − (KZ66 + KZ61)</td></tr>
+    </table>
+
+    <h3>Batch-Export (Wizard)</h3>
+    <p>Der DATEV-Batch-Export-Wizard ermöglicht:</p>
+    <ul>
+        <li>Periodenwahl (von/bis)</li>
+        <li>Formatwahl: DATEV CSV oder Standard CSV</li>
+        <li>Option: Bereits exportierte Cases einschließen</li>
+        <li>Vorschau: Anzahl gefundener Cases anzeigen</li>
+        <li>Automatische Status-Transition: <span class="state-badge state-posted">Posted</span> → <span class="state-badge state-exported">Exported</span></li>
+        <li>Download via <code>ir.actions.act_url</code></li>
+    </ul>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     8. SICHERHEIT & BERECHTIGUNGEN
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="security">
+    <h2>8. Sicherheit &amp; Berechtigungen</h2>
+
+    <h3>Rollenmodell</h3>
+    <table>
+        <tr><th>Rolle</th><th>Technischer Name</th><th>Berechtigungen</th></tr>
+        <tr>
+            <td><span class="role-user">User</span></td>
+            <td><code>ai_office_user</code></td>
+            <td>Cases lesen/erstellen/bearbeiten, Suggestions lesen, Audit-Logs lesen, OPOS ausführen</td>
+        </tr>
+        <tr>
+            <td><span class="role-approver">Approver</span></td>
+            <td><code>ai_office_approver</code></td>
+            <td>Alles von User + Approve, Post, Export, Reconciliation, Export-Wizards</td>
+        </tr>
+        <tr>
+            <td><span class="role-admin">Admin</span></td>
+            <td><code>ai_office_admin</code></td>
+            <td>Alles von Approver + Policies verwalten, Cases löschen, alle Konfigurationen</td>
+        </tr>
+    </table>
+
+    <h3>Berechtigungsmatrix (ir.model.access)</h3>
+    <table>
+        <tr><th>Modell</th><th>User</th><th>Approver</th><th>Admin</th></tr>
+        <tr><td><code>account.ai.case</code></td><td>R/W/C</td><td>R/W/C</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.suggestion</code></td><td>R/W/C</td><td>R/W/C</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.audit_log</code></td><td>R</td><td>R</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.policy</code></td><td>R</td><td>R</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.datev.export</code></td><td>—</td><td>R/W/C/D</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.tax.report</code></td><td>—</td><td>R/W/C/D</td><td>R/W/C/D</td></tr>
+        <tr><td><code>account.ai.audit_log.export</code></td><td>—</td><td>R/W/C/D</td><td>R/W/C/D</td></tr>
+    </table>
+
+    <h3>GoBD-Sicherheitsmaßnahmen</h3>
+    <div class="card-grid">
+        <div class="card success">
+            <h4>Audit-Log-Immutabilität</h4>
+            <p><code>unlink()</code> Override: Nur Superuser kann Audit-Logs löschen. Reguläre User erhalten <code>UserError</code>.</p>
+        </div>
+        <div class="card success">
+            <h4>Human-in-the-Loop</h4>
+            <p>Jede kritische Aktion (Approve, Post, Export, Reconciliation) erfordert explizite Benutzerinteraktion durch die Approver-Gruppe.</p>
+        </div>
+        <div class="card success">
+            <h4>Lückenlose Protokollierung</h4>
+            <p>Jede Zustandsänderung wird mit Before/After-JSON, Actor und Timestamp protokolliert. Automatische Einträge haben <code>actor_type=agent</code>.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     9. MENÜSTRUKTUR
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="menu">
+    <h2>9. Menüstruktur</h2>
+
+    <div class="highlight-box" style="font-family: monospace; font-size: 0.95rem; line-height: 2;">
+        <strong>&#x1F4C2; AI Office</strong> (Hauptmenü, Sequence 90)<br>
+        &nbsp;&nbsp;├── &#x1F4E5; <strong>Inbox</strong> — Cases in new/enriched/proposed/needs_attention<br>
+        &nbsp;&nbsp;├── &#x1F4CB; <strong>Cases</strong> — Alle Cases<br>
+        &nbsp;&nbsp;├── &#x1F4A1; <strong>Suggestions</strong> — Alle KI-Vorschläge<br>
+        &nbsp;&nbsp;├── &#x1F4DD; <strong>Audit Logs</strong> — Unveränderbare Protokolle<br>
+        &nbsp;&nbsp;├── &#x1F4E4; <strong>Export</strong> <span class="text-muted">(nur Approver)</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── DATEV Export<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── Tax Report (UStVA/ZM)<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── Audit Log Export<br>
+        &nbsp;&nbsp;├── &#x1F4DC; <strong>Policies</strong> — Regelwerke<br>
+        &nbsp;&nbsp;└── &#x2699;&#xFE0F; <strong>Settings</strong> <span class="text-muted">(nur Admin)</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── Policies
+    </div>
+
+    <h3>Views</h3>
+    <table>
+        <tr><th>View</th><th>Typ</th><th>Features</th></tr>
+        <tr>
+            <td>AI Case Tree</td>
+            <td>List</td>
+            <td>Farbige Badges (Status-Widget), Warning/Danger-Decoration, Period/Partner-Spalten</td>
+        </tr>
+        <tr>
+            <td>AI Case Form</td>
+            <td>Form</td>
+            <td>Statusbar, 9 Action-Buttons (kontextabhängig sichtbar), 4 Notebook-Tabs: Documents, Suggestions, OPOS Matches, Audit Trail, Chatter</td>
+        </tr>
+        <tr>
+            <td>AI Case Search</td>
+            <td>Search</td>
+            <td>8 Status-Filter, Group By: State/Partner/Period</td>
+        </tr>
+        <tr>
+            <td>Audit Log Tree/Form</td>
+            <td>List + Form</td>
+            <td>Nur-Lesen (create=0, delete=0), Export-Button im Header</td>
+        </tr>
+    </table>
+</section>
+
+</div><!-- /container -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer>
+    <p>
+        <strong>AI Office – Steuerbüro Framework</strong> v18.0.1.0.0 | LGPL-3<br>
+        &copy; One Million Digital UG | <a href="https://onemillion-digital.de">onemillion-digital.de</a>
+    </p>
+    <p class="text-muted" style="margin-top:0.5rem;">
+        Generiert am 15. Februar 2026 | account_ai_office Modul-Dokumentation
+    </p>
+</footer>
+
+</body>
+</html>
