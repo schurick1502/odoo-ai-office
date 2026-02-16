@@ -1,7 +1,7 @@
 """Tests for the DocumentFlow MCP server and client."""
 
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -28,9 +28,9 @@ class TestDocFlowClient:
         )
 
     async def test_health(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = {"status": "ok"}
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -41,9 +41,9 @@ class TestDocFlowClient:
             assert result["status"] == "ok"
 
     async def test_list_jobs(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = SAMPLE_JOBS_LIST
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -55,9 +55,9 @@ class TestDocFlowClient:
             assert result["items"][0]["id"] == 42
 
     async def test_get_job(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = SAMPLE_JOB
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -69,9 +69,9 @@ class TestDocFlowClient:
             assert result["document_data"]["sender_name"] == "Test Lieferant GmbH"
 
     async def test_get_bookings(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = SAMPLE_BOOKINGS
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -83,9 +83,9 @@ class TestDocFlowClient:
             assert result[0]["debit_account"] == "6300"
 
     async def test_get_positions(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = SAMPLE_POSITIONS
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -97,9 +97,9 @@ class TestDocFlowClient:
             assert result[0]["description"] == "Druckerpapier A4"
 
     async def test_approve_job(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = {**SAMPLE_JOB, "status": "approved"}
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -110,9 +110,9 @@ class TestDocFlowClient:
             assert result["status"] == "approved"
 
     async def test_search_jobs(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = SAMPLE_JOBS_LIST
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -123,9 +123,9 @@ class TestDocFlowClient:
             assert result["total"] == 1
 
     async def test_export_datev(self, client):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.json.return_value = {"exported": 5, "month": "2024-01"}
-        mock_response.raise_for_status = lambda: None
+        mock_response.raise_for_status.return_value = None
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http = AsyncMock()
@@ -141,17 +141,12 @@ class TestDocFlowClient:
             username="admin",
             password="secret",
         )
-        login_response = AsyncMock()
+        login_response = MagicMock()
         login_response.json.return_value = {"access_token": "new-jwt"}
-        login_response.raise_for_status = lambda: None
-
-        health_response = AsyncMock()
-        health_response.json.return_value = {"status": "ok"}
-        health_response.raise_for_status = lambda: None
+        login_response.raise_for_status.return_value = None
 
         mock_http = AsyncMock()
         mock_http.post.return_value = login_response
-        mock_http.get.return_value = health_response
 
         with patch("httpx.AsyncClient", return_value=mock_http):
             await client._login()
