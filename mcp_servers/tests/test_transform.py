@@ -1,12 +1,12 @@
 """Tests for bridge transform functions."""
 
-from mcp_servers.bridge.transform import (
+from bridge.transform import (
     calculate_risk,
     transform_bookings_to_suggestion,
     transform_enrichment_suggestions,
     transform_job_to_case_vals,
 )
-from mcp_servers.tests.conftest import SAMPLE_BOOKINGS, SAMPLE_JOB
+from tests.conftest import SAMPLE_BOOKINGS, SAMPLE_JOB
 
 
 class TestTransformJobToCaseVals:

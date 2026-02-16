@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mcp_servers.odoo_bridge.client import OdooAiOfficeClient
+from odoo_bridge.client import OdooAiOfficeClient
 
 
 # ── Client Tests ────────────────────────────────────────────
@@ -199,9 +199,9 @@ class TestOdooClient:
 class TestOdooServerTools:
     """Test MCP server tools return valid JSON strings."""
 
-    @patch("mcp_servers.odoo_bridge.server._get_client")
+    @patch("odoo_bridge.server._get_client")
     def test_odoo_health_tool(self, mock_get):
-        from mcp_servers.odoo_bridge.server import odoo_health
+        from odoo_bridge.server import odoo_health
 
         mock_client = MagicMock()
         mock_client.health.return_value = {"status": "ok", "odoo_version": "18.0"}
@@ -211,9 +211,9 @@ class TestOdooServerTools:
         data = json.loads(result)
         assert data["status"] == "ok"
 
-    @patch("mcp_servers.odoo_bridge.server._get_client")
+    @patch("odoo_bridge.server._get_client")
     def test_odoo_list_cases_tool(self, mock_get):
-        from mcp_servers.odoo_bridge.server import odoo_list_cases
+        from odoo_bridge.server import odoo_list_cases
 
         mock_client = MagicMock()
         mock_client.list_cases.return_value = [
@@ -225,9 +225,9 @@ class TestOdooServerTools:
         data = json.loads(result)
         assert len(data) == 1
 
-    @patch("mcp_servers.odoo_bridge.server._get_client")
+    @patch("odoo_bridge.server._get_client")
     def test_odoo_create_case_tool(self, mock_get):
-        from mcp_servers.odoo_bridge.server import odoo_create_case
+        from odoo_bridge.server import odoo_create_case
 
         mock_client = MagicMock()
         mock_client.create_case.return_value = 42
@@ -243,9 +243,9 @@ class TestOdooServerTools:
         assert data["case_id"] == 42
         assert data["status"] == "created"
 
-    @patch("mcp_servers.odoo_bridge.server._get_client")
+    @patch("odoo_bridge.server._get_client")
     def test_odoo_add_suggestion_tool(self, mock_get):
-        from mcp_servers.odoo_bridge.server import odoo_add_suggestion
+        from odoo_bridge.server import odoo_add_suggestion
 
         mock_client = MagicMock()
         mock_client.add_suggestion.return_value = 99
@@ -263,9 +263,9 @@ class TestOdooServerTools:
         data = json.loads(result)
         assert data["suggestion_id"] == 99
 
-    @patch("mcp_servers.odoo_bridge.server._get_client")
+    @patch("odoo_bridge.server._get_client")
     def test_odoo_propose_case_tool(self, mock_get):
-        from mcp_servers.odoo_bridge.server import odoo_propose_case
+        from odoo_bridge.server import odoo_propose_case
 
         mock_client = MagicMock()
         mock_get.return_value = mock_client

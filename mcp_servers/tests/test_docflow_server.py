@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from mcp_servers.docflow.client import DocFlowClient
-from mcp_servers.tests.conftest import (
+from docflow.client import DocFlowClient
+from tests.conftest import (
     SAMPLE_BOOKINGS,
     SAMPLE_JOB,
     SAMPLE_JOBS_LIST,
@@ -175,9 +175,9 @@ class TestDocFlowClient:
 class TestDocFlowServerTools:
     """Test MCP server tools return valid JSON strings."""
 
-    @patch("mcp_servers.docflow.server._get_client")
+    @patch("docflow.server._get_client")
     async def test_docflow_health_tool(self, mock_get):
-        from mcp_servers.docflow.server import docflow_health
+        from docflow.server import docflow_health
 
         mock_client = AsyncMock()
         mock_client.health.return_value = {"status": "ok"}
@@ -187,9 +187,9 @@ class TestDocFlowServerTools:
         data = json.loads(result)
         assert data["status"] == "ok"
 
-    @patch("mcp_servers.docflow.server._get_client")
+    @patch("docflow.server._get_client")
     async def test_docflow_list_jobs_tool(self, mock_get):
-        from mcp_servers.docflow.server import docflow_list_jobs
+        from docflow.server import docflow_list_jobs
 
         mock_client = AsyncMock()
         mock_client.list_jobs.return_value = SAMPLE_JOBS_LIST
@@ -199,9 +199,9 @@ class TestDocFlowServerTools:
         data = json.loads(result)
         assert data["total"] == 1
 
-    @patch("mcp_servers.docflow.server._get_client")
+    @patch("docflow.server._get_client")
     async def test_docflow_get_job_tool(self, mock_get):
-        from mcp_servers.docflow.server import docflow_get_job
+        from docflow.server import docflow_get_job
 
         mock_client = AsyncMock()
         mock_client.get_job.return_value = SAMPLE_JOB
@@ -212,9 +212,9 @@ class TestDocFlowServerTools:
         assert data["id"] == 42
         assert data["document_data"]["invoice_number"] == "RE-2024-001"
 
-    @patch("mcp_servers.docflow.server._get_client")
+    @patch("docflow.server._get_client")
     async def test_docflow_get_bookings_tool(self, mock_get):
-        from mcp_servers.docflow.server import docflow_get_bookings
+        from docflow.server import docflow_get_bookings
 
         mock_client = AsyncMock()
         mock_client.get_bookings.return_value = SAMPLE_BOOKINGS

@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mcp_servers.bridge.config import BridgeConfig
-from mcp_servers.bridge.sync import BridgeSync
-from mcp_servers.tests.conftest import SAMPLE_BOOKINGS, SAMPLE_JOB, SAMPLE_JOBS_LIST
+from bridge.config import BridgeConfig
+from bridge.sync import BridgeSync
+from tests.conftest import SAMPLE_BOOKINGS, SAMPLE_JOB, SAMPLE_JOBS_LIST
 
 
 @pytest.fixture

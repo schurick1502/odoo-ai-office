@@ -16,6 +16,9 @@ dev = [
     "respx>=0.22.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["docflow*", "odoo_bridge*", "bridge*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

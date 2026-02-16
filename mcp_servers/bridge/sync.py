@@ -4,8 +4,8 @@ import asyncio
 import logging
 import sys
 
-from ..docflow.client import DocFlowClient
-from ..odoo_bridge.client import OdooAiOfficeClient
+from docflow.client import DocFlowClient
+from odoo_bridge.client import OdooAiOfficeClient
 from .config import BridgeConfig
 from .transform import (
     transform_bookings_to_suggestion,
