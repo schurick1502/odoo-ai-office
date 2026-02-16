@@ -5,7 +5,7 @@
         <field name="name">account.ai.audit_log.tree</field>
         <field name="model">account.ai.audit_log</field>
         <field name="arch" type="xml">
-            <tree string="AI Audit Logs" create="0" delete="0">
+            <list string="AI Audit Logs" create="0" delete="0">
                 <header>
                     <button name="%(action_audit_log_export)d" type="action"
                         string="Export" class="btn-secondary"
@@ -17,7 +17,7 @@
                 <field name="actor"/>
                 <field name="action"/>
                 <field name="request_id"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -55,7 +55,7 @@
     <record id="action_ai_audit_log" model="ir.actions.act_window">
         <field name="name">Audit Logs</field>
         <field name="res_model">account.ai.audit_log</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No audit logs yet.

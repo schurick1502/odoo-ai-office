@@ -19,7 +19,6 @@ Provides a structured workflow for AI-assisted accounting:
         "base",
         "account",
         "mail",
-        "fetchmail",
     ],
     "external_dependencies": {
         "python": ["requests"],
