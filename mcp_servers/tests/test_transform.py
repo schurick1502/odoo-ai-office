@@ -1,7 +1,5 @@
 """Tests for bridge transform functions."""
 
-import pytest
-
 from mcp_servers.bridge.transform import (
     calculate_risk,
     transform_bookings_to_suggestion,

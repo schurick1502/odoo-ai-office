@@ -1,7 +1,5 @@
 """Shared test fixtures for MCP server tests."""
 
-import pytest
-
 
 SAMPLE_JOB = {
     "id": 42,
